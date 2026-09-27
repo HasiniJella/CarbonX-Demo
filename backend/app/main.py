@@ -913,7 +913,7 @@ def verify_land_document(data: LandVerificationModel, current_user: dict = Depen
     try:
         from app.services.fraud_engine import run_fraud_checks
         from app.services.registry_service import lookup_survey
-        from app.services.trust_engine import apply_fraud, decide_tier
+        from app.services.trust_engine import apply_fraud, decide_tier, names_match
         from app.services.kyc_service import _match_name
 
         _require_database()
@@ -992,26 +992,44 @@ def verify_land_document(data: LandVerificationModel, current_user: dict = Depen
         if registry.get("error") == "permission_denied":
             registry = {"found": False, "survey_number": survey_number, "message": registry.get("message")}
 
+        # Identity consensus: profile ~ registry owner AND doc ~ registry owner
+        # (with survey found). When identity is proven, noisy signals (OCR
+        # village text, EXIF, area wording) become notes — not fraud verdicts.
+        _reg_owner = (registry or {}).get("owner_name") or ""
+
         ocr_text = f"{checks.get('ocr_text_preview') or ''} {pahani_text} {data.extracted_text or ''}"
         document_owner = pahani_fields.get("pattadar_name") or ""
         document_aadhaar = str(pahani_fields.get("aadhaar") or "").replace(" ", "").replace("-", "")
         registered_last4 = str(profile.get("aadhaar_last4") or "")[-4:]
         _name_score, name_ok = _match_name(profile.get("name", ""), document_owner or ocr_text)
-        aadhaar_ok = bool(document_aadhaar and registered_last4 and document_aadhaar[-4:] == registered_last4)
+        # Aadhaar mismatch only counts when BOTH sides are on file. A missing
+        # registered last-4 (or unreadable doc Aadhaar) is "unknown", not fraud.
+        aadhaar_ok = True
+        if document_aadhaar and registered_last4:
+            aadhaar_ok = document_aadhaar[-4:] == registered_last4
         profile_village = _normalize_text(profile.get("village") or "")
         profile_district = _normalize_text(profile.get("district") or "")
         document_village = _normalize_text(pahani_fields.get("village") or "")
         document_district = _normalize_text(pahani_fields.get("district") or "")
         village_ok = bool(profile_village and document_village and profile_village == document_village)
         district_ok = bool(profile_district and document_district and profile_district == document_district)
+        identity_ok = (
+            bool(registry.get("found"))
+            and names_match(profile.get("name", ""), _reg_owner)
+            and (not document_owner or names_match(document_owner, _reg_owner))
+        )
         three_way_failures = []
         if not name_ok:
             three_way_failures.append("pahani_owner_name_mismatch")
         if not aadhaar_ok:
             three_way_failures.append("pahani_aadhaar_mismatch")
-        if not village_ok or not district_ok:
+        if (not village_ok or not district_ok) and not identity_ok:
             three_way_failures.append("pahani_location_mismatch")
         geojson = pahani_polygon or data.geojson or registry.get("geojson")
+        # Overlap against other farms is skipped when the boundary IS the
+        # official registry geometry for the claimed survey (same-parcel data,
+        # not a land grab).
+        registry_sourced = bool(registry.get("found")) and geojson is not None and geojson is registry.get("geojson")
         decision = decide_tier(
             fpo_path=False,
             survey_number=survey_number,
@@ -1030,7 +1048,26 @@ def verify_land_document(data: LandVerificationModel, current_user: dict = Depen
             other_farm_geojsons=db.farm_geojsons_except(phone) if geojson else [],
             claimed_area_ha=claimed_ha or registry.get("area_ha"),
             skip_ndvi=True,
+            skip_overlap=registry_sourced,
         )
+        # Forgiveness: machine-proven or same-user signals are not fraud.
+        _forgiven = []
+        if pahani_fields.get("survey_no") and pahani_fields.get("pattadar_name"):
+            _forgiven.append("ocr_readability")  # successful parse proves readability
+        try:
+            _sha_owners = set(db.sha_owner_phones(checks.get("document_sha256") or ""))
+        except Exception:
+            _sha_owners = set()
+        if _sha_owners and _sha_owners <= {phone}:
+            _forgiven.append("duplicate_document")  # own retry, not theft
+        if identity_ok:
+            _forgiven.append("area_mismatch")  # size dispute -> Tier 1B note, not fraud
+        if _forgiven:
+            fraud["failed_checks"] = [c for c in fraud.get("failed_checks", []) if c not in _forgiven]
+            fraud["warnings"] = [w for w in fraud.get("warnings", []) if w not in _forgiven]
+            if not fraud["failed_checks"] and fraud.get("status") == "FLAGGED":
+                fraud["status"] = "VERIFIED"
+                fraud["risk"] = "LOW"
         if three_way_failures:
             fraud["failed_checks"] = list(dict.fromkeys([*fraud.get("failed_checks", []), *three_way_failures]))
             fraud["status"] = "FLAGGED"
@@ -1041,6 +1078,28 @@ def verify_land_document(data: LandVerificationModel, current_user: dict = Depen
             fraud["risk"] = "HIGH"
         trust = apply_fraud(decision, fraud)
         reasons = list(trust["failed_checks"])
+        # No-double-flag guards. A standing VERIFIED record for the same survey
+        # protects the parcel: same-identity re-attempts keep it; only FPO
+        # review may change verified status. Genuine owner mismatches still flag.
+        if survey_number and trust["status"] != "VERIFIED":
+            _standing = None
+            try:
+                _standing = db.verified_kyc_for_survey(phone, survey_number)
+            except Exception:
+                _standing = None
+            _doc_matches_profile = bool(document_owner) and names_match(profile.get("name", ""), document_owner)
+            if _standing is not None and _doc_matches_profile:
+                _st = _standing.get("extracted_fields") or {}
+                trust = {
+                    "tier": _st.get("tier"),
+                    "badge": _st.get("badge"),
+                    "risk": _st.get("risk", "LOW"),
+                    "status": "VERIFIED",
+                    "failed_checks": [],
+                    "marketplace_eligible": _st.get("marketplace_eligible", True),
+                    "credits_blocked": False,
+                }
+                reasons = [*(reasons or []), "prior_verified_record_stands"]
         record = {
             "owner_phone": phone,
             "status": trust["status"],
@@ -1080,18 +1139,33 @@ def verify_land_document(data: LandVerificationModel, current_user: dict = Depen
         created_farm_id = data.farm_id or (patched or {}).get("id")
         if not created_farm_id and trust["status"] in ("PENDING", "FLAGGED"):
             try:
-                created = db.insert_farm({
-                    "owner_phone": phone,
-                    "name": f"Survey {survey_number or 'unlisted'} — {trust['status'].title()} Parcel",
-                    "crop_type": pahani_fields.get("crop_name") or "Mixed Crop",
-                    "irrigation": pahani_fields.get("irrigation_source") or "Rainfed",
-                    "geojson": geojson,
-                    "area_hectares": claimed_ha,
-                    "status": trust["status"],
-                    **({"badge": trust["badge"]} if trust.get("badge") else {}),
-                })
-                if created:
-                    created_farm_id = created.get("id")
+                # Reuse an existing non-verified parcel for the same survey
+                # instead of stacking duplicate flagged farms ("flagged twice").
+                _reuse = None
+                for _f in db.get_farms(phone):
+                    if (
+                        survey_number
+                        and str(_f.get("name") or "").startswith(f"Survey {survey_number}")
+                        and str(_f.get("status") or "").upper() != "VERIFIED"
+                    ):
+                        _reuse = _f
+                        break
+                if _reuse is not None:
+                    _patch_farm(_reuse.get("id"), dict(farm_fields))
+                    created_farm_id = _reuse.get("id")
+                else:
+                    created = db.insert_farm({
+                        "owner_phone": phone,
+                        "name": f"Survey {survey_number or 'unlisted'} — {trust['status'].title()} Parcel",
+                        "crop_type": pahani_fields.get("crop_name") or "Mixed Crop",
+                        "irrigation": pahani_fields.get("irrigation_source") or "Rainfed",
+                        "geojson": geojson,
+                        "area_hectares": claimed_ha,
+                        "status": trust["status"],
+                        **({"badge": trust["badge"]} if trust.get("badge") else {}),
+                    })
+                    if created:
+                        created_farm_id = created.get("id")
             except Exception as exc:
                 print(f"auto-create tier3 farm failed: {exc}")
         return {

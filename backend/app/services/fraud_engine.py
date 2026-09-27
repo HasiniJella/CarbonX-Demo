@@ -27,6 +27,7 @@ def run_fraud_checks(
     claimed_area_ha: Optional[float] = None,
     skip_ocr: bool = False,
     skip_ndvi: bool = False,
+    skip_overlap: bool = False,
 ) -> dict:
     failed = []
     warnings = []
@@ -41,8 +42,9 @@ def run_fraud_checks(
             failed.append("ocr_readability")
         elif not checks.get("ocr_available") and not (ocr_text or "").strip():
             failed.append("ocr_readability")
-        if not checks.get("exif_present"):
-            failed.append("exif_validation")
+        # NOTE: missing EXIF is not fraud — phone photos, WhatsApp images and
+        # screenshots routinely strip it. OCR + registry + name checks carry
+        # the weight instead.
 
     if village and not checks.get("geocoded_location"):
         failed.append("village_geocode")
@@ -55,7 +57,7 @@ def run_fraud_checks(
         if not matched and not checks.get("name_match"):
             failed.append("name_pattern")
 
-    if geojson and other_farm_geojsons:
+    if geojson and other_farm_geojsons and not skip_overlap:
         for other in other_farm_geojsons:
             if other and polygons_overlap(geojson, other):
                 failed.append("polygon_overlap")

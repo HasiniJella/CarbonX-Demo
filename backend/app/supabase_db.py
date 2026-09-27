@@ -97,6 +97,41 @@ def get_document_hashes() -> list[str]:
     return [row["document_sha256"] for row in (res.data or []) if row.get("document_sha256")]
 
 
+def sha_owner_phones(sha: str) -> list:
+    """All phones that previously submitted this document hash (fraud context)."""
+    sb = _client()
+    if not sb or not sha:
+        return []
+    res = sb.table("kyc_verifications").select("owner_phone").eq("document_sha256", sha).execute()
+    return [row.get("owner_phone") for row in (res.data or []) if row.get("owner_phone")]
+
+
+def verified_kyc_for_survey(phone: str, survey_number: str) -> Optional[dict]:
+    """Most recent VERIFIED record for this phone + survey, if any.
+
+    A standing VERIFIED record protects the parcel from being downgraded by
+    later noisy re-attempts — only FPO review may change verified status.
+    """
+    sb = _client()
+    if not sb or not (survey_number or "").strip():
+        return None
+    res = (
+        sb.table("kyc_verifications")
+        .select("*")
+        .eq("owner_phone", phone)
+        .eq("status", "VERIFIED")
+        .order("created_at", desc=True)
+        .limit(10)
+        .execute()
+    )
+    want = survey_number.strip().lower()
+    for row in res.data or []:
+        ef = row.get("extracted_fields") or {}
+        if str(ef.get("survey_number") or "").strip().lower() == want:
+            return row
+    return None
+
+
 def insert_kyc_verification(record: dict) -> Optional[dict]:
     sb = _client()
     if not sb:

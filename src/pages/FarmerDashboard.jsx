@@ -350,7 +350,7 @@ export default function FarmerDashboard() {
                   Parcel <code className="font-mono font-bold">{currentFarm.name}</code> is awaiting FPO attestation.
                   Credit minting and earnings stay locked until your FPO officer confirms it.
                 </p>
-                {(kyc?.reasons || []).length > 0 && (
+                {(kyc?.reasons || []).length > 0 && isPending && (
                   <p className="text-xs text-amber-800">Flagged checks: {(kyc.reasons || []).join(', ')}</p>
                 )}
               </div>
