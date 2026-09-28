@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import VerificationBadge from '../components/VerificationBadge';
 import { useAuth } from '../context/AuthContext';
-import { verifyLandDocument } from '../services/api';
+import { PY, verifyLandDocument } from '../services/api';
 
 export default function FarmOwnershipVerification() {
   const navigate = useNavigate();
@@ -71,7 +71,7 @@ export default function FarmOwnershipVerification() {
 
     try {
       const token = localStorage.getItem('carbonx_token');
-      const response = await fetch(`/py-api/land/registry/${encodeURIComponent(survey)}`, {
+      const response = await fetch(`${PY}/land/registry/${encodeURIComponent(survey)}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (response.status === 401) {
@@ -225,7 +225,7 @@ export default function FarmOwnershipVerification() {
       const token = localStorage.getItem('carbonx_token');
       const form = new FormData();
       form.append('file', file);
-      const ocrRes = await fetch('/py-api/documents/parse-pahani', {
+      const ocrRes = await fetch(`${PY}/documents/parse-pahani`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: form,
@@ -234,10 +234,10 @@ export default function FarmOwnershipVerification() {
         navigate('/farmer/login');
         return;
       }
-      // Safe JSON parse: the deployed static host has no /py-api proxy
-      // (vite proxy is dev-only), so it may return index.html or an empty
-      // body. Surface that as an actionable error instead of
-      // "Unexpected end of JSON input" with all steps stuck on checking...
+      // Safe JSON parse: the request goes to the PY base (VITE_PY_API in
+      // production, /py-api dev proxy locally). A non-JSON or empty body
+      // means the API base is wrong or the backend is down — surface that
+      // instead of "Unexpected end of JSON input" with steps stuck checking.
       const rawText = await ocrRes.text();
       let ocr = null;
       if (rawText) {
@@ -245,12 +245,12 @@ export default function FarmOwnershipVerification() {
           ocr = JSON.parse(rawText);
         } catch {
           throw new Error(
-            'Backend unreachable — /py-api did not return JSON (deployed site needs VITE_PY_API pointed at the backend or a /py-api proxy). Your file is kept — use Tier 3 FPO review below.'
+            `Backend unreachable — ${PY} did not return JSON (HTTP ${ocrRes.status}). Check VITE_PY_API points at the backend. Your file is kept — use Tier 3 FPO review below.`
           );
         }
       } else {
         throw new Error(
-          `Backend returned an empty response (HTTP ${ocrRes.status}). The deployed frontend cannot reach the OCR API — set VITE_PY_API to the backend URL. Your file is kept — use Tier 3 FPO review below.`
+          `Backend returned an empty response (HTTP ${ocrRes.status}) from ${PY}. The frontend cannot reach the OCR API — check VITE_PY_API. Your file is kept — use Tier 3 FPO review below.`
         );
       }
       if (!ocrRes.ok || !ocr.success) {
@@ -274,7 +274,7 @@ export default function FarmOwnershipVerification() {
       let registryAreaHa = null;
       if (surveyNo) {
         try {
-          const regRes = await fetch(`/py-api/land/registry/${encodeURIComponent(surveyNo)}`, {
+          const regRes = await fetch(`${PY}/land/registry/${encodeURIComponent(surveyNo)}`, {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           });
           if (regRes.ok) {
@@ -440,9 +440,8 @@ export default function FarmOwnershipVerification() {
     reader.readAsDataURL(file);
   });
 
-  // Tier 2 -> Tier 3: document check failed, route to FPO review.
-  // Backend /verify-land flags it and auto-creates a PENDING/FLAGGED farm
-  // so the parcel lands in the FPO pending/flagged queue.
+  // Tier 2 -> Tier 3: document check failed, route to FPO review via the
+  // configured PY base (same base as the OCR + registry calls above).
   const requestFpoReview = async () => {
     if (!pahaniFile || fpoSubmitting) return;
     setFpoSubmitting(true);
@@ -467,8 +466,8 @@ export default function FarmOwnershipVerification() {
     } catch (err) {
       const raw = err?.message || '';
       setProceedBlocked(
-        /json|Unexpected end|empty response/i.test(raw)
-          ? 'Backend unreachable — /py-api did not return JSON (deployed site needs VITE_PY_API pointed at the backend). Ask your FPO officer to verify manually.'
+        /json|Unexpected end|empty response|Failed to fetch|NetworkError/i.test(raw)
+          ? `Backend unreachable — ${PY} did not respond with JSON (HTTP error). Check VITE_PY_API points at the backend. Ask your FPO officer to verify manually.`
           : (raw || 'Could not send to FPO review. Please try again.')
       );
     } finally {

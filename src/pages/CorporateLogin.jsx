@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, ArrowRight, ShieldCheck, RefreshCw, KeyRound, Lock, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { PY } from '../services/api';
 
 export default function CorporateLogin() {
   const navigate = useNavigate();
@@ -76,8 +77,8 @@ export default function CorporateLogin() {
     setIsVerifying(true);
 
     try {
-      // Attempt backend authentication
-      const response = await fetch('/py-api/corporate/login', {
+      // Attempt backend authentication (PY base: VITE_PY_API in production)
+      const response = await fetch(`${PY}/corporate/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, password })
