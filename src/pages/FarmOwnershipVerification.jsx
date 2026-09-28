@@ -234,7 +234,25 @@ export default function FarmOwnershipVerification() {
         navigate('/farmer/login');
         return;
       }
-      const ocr = await ocrRes.json();
+      // Safe JSON parse: the deployed static host has no /py-api proxy
+      // (vite proxy is dev-only), so it may return index.html or an empty
+      // body. Surface that as an actionable error instead of
+      // "Unexpected end of JSON input" with all steps stuck on checking...
+      const rawText = await ocrRes.text();
+      let ocr = null;
+      if (rawText) {
+        try {
+          ocr = JSON.parse(rawText);
+        } catch {
+          throw new Error(
+            'Backend unreachable — /py-api did not return JSON (deployed site needs VITE_PY_API pointed at the backend or a /py-api proxy). Your file is kept — use Tier 3 FPO review below.'
+          );
+        }
+      } else {
+        throw new Error(
+          `Backend returned an empty response (HTTP ${ocrRes.status}). The deployed frontend cannot reach the OCR API — set VITE_PY_API to the backend URL. Your file is kept — use Tier 3 FPO review below.`
+        );
+      }
       if (!ocrRes.ok || !ocr.success) {
         throw new Error(ocr.detail || ocr.message || 'OCR service unavailable');
       }
@@ -260,14 +278,23 @@ export default function FarmOwnershipVerification() {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           });
           if (regRes.ok) {
-            const reg = await regRes.json();
-            registryFound = Boolean(reg.found);
-            registryOwner = reg.owner_name || '';
-            registryGeojson = reg.geojson || null;
-            registryAreaHa = reg.area_ha ?? null;
-            setStep(4, registryFound, registryFound
-              ? `Matched: ${reg.owner_name}, ${reg.area_ha} ha`
-              : 'Not in registry — Tier 2 document path');
+            let reg = null;
+            try {
+              reg = JSON.parse(await regRes.text());
+            } catch {
+              reg = null;
+            }
+            if (!reg) {
+              setStep(4, false, 'Registry unreachable (non-JSON response)');
+            } else {
+              registryFound = Boolean(reg.found);
+              registryOwner = reg.owner_name || '';
+              registryGeojson = reg.geojson || null;
+              registryAreaHa = reg.area_ha ?? null;
+              setStep(4, registryFound, registryFound
+                ? `Matched: ${reg.owner_name}, ${reg.area_ha} ha`
+                : 'Not in registry — Tier 2 document path');
+            }
           } else {
             setStep(4, false, 'Registry lookup failed — upload a valid document');
           }
@@ -371,9 +398,12 @@ export default function FarmOwnershipVerification() {
         setPipelineDone(true);
       }
     } catch (err) {
-      setPipelineError(err.message || 'Document verification failed. Please upload a valid Pahani.');
+      const msg = err.message || 'Document verification failed. Please upload a valid Pahani.';
+      setPipelineError(msg);
+      // Mark every checklist step failed so the UI never sticks on checking...
+      setStepResults(trustChecklist.map(() => ({ passed: false, detail: 'Not reached — OCR request failed' })));
       setVerificationStatus('NOT_VERIFIED');
-      setVerificationMessage('Not Verified — could not read this document. Please upload a valid Pahani.');
+      setVerificationMessage(`Not Verified — ${msg}`);
       setPipelineDone(true);
     } finally {
       setIsProcessingPipeline(false);
@@ -435,7 +465,12 @@ export default function FarmOwnershipVerification() {
         setProceedBlocked(res?.message || 'Could not send to FPO review. Please try again.');
       }
     } catch (err) {
-      setProceedBlocked(err?.message || 'Could not send to FPO review. Please try again.');
+      const raw = err?.message || '';
+      setProceedBlocked(
+        /json|Unexpected end|empty response/i.test(raw)
+          ? 'Backend unreachable — /py-api did not return JSON (deployed site needs VITE_PY_API pointed at the backend). Ask your FPO officer to verify manually.'
+          : (raw || 'Could not send to FPO review. Please try again.')
+      );
     } finally {
       setFpoSubmitting(false);
     }
