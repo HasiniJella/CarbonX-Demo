@@ -11,6 +11,7 @@ import FarmerVoiceAssistant from '../features/voice-agent/FarmerVoiceAssistant';
 
 const ROLE_NAV = {
   farmer: [
+    { name: 'Home', path: '/', icon: Sprout },
     { name: 'Dashboard', path: '/farmer/dashboard', icon: Home },
     { name: 'Land Verification', path: '/farmer/land-verification', icon: ShieldCheck },
     { name: 'Carbon Passport', path: '/farmer/passport/TEL-124A', icon: Compass },
@@ -19,12 +20,14 @@ const ROLE_NAV = {
     { name: 'Support', path: '/support', icon: ClipboardList },
   ],
   fpo: [
+    { name: 'Home', path: '/', icon: Sprout },
     { name: 'FPO Dashboard', path: '/fpo/dashboard', icon: Building2 },
     { name: 'Credit Pooling', path: '/fpo/credit-pooling', icon: ShieldCheck },
     { name: 'Marketplace', path: '/marketplace', icon: ShoppingCart },
     { name: 'Support', path: '/support', icon: ClipboardList },
   ],
   buyer: [
+    { name: 'Home', path: '/', icon: Sprout },
     { name: 'ESG Dashboard', path: '/corporate/dashboard', icon: Home },
     { name: 'Marketplace', path: '/marketplace', icon: ShoppingCart },
     { name: 'Bulk Auto-Match', path: '/marketplace/checkout', icon: BarChart3 },
@@ -32,12 +35,14 @@ const ROLE_NAV = {
     { name: 'Support', path: '/support', icon: ClipboardList },
   ],
   verifier: [
+    { name: 'Home', path: '/', icon: Sprout },
     { name: 'FPO Audit Desk', path: '/fpo/dashboard', icon: Home },
     { name: 'Admin Compliance', path: '/admin/dashboard', icon: ShieldCheck },
     { name: 'Marketplace', path: '/marketplace', icon: ShoppingCart },
     { name: 'Support', path: '/support', icon: ClipboardList },
   ],
   admin: [
+    { name: 'Home', path: '/', icon: Sprout },
     { name: 'Admin Dashboard', path: '/admin/dashboard', icon: Home },
     { name: 'FPO Desk', path: '/fpo/dashboard', icon: Building2 },
     { name: 'Marketplace', path: '/marketplace', icon: ShoppingCart },
@@ -160,7 +165,8 @@ export default function Layout({ children }) {
           </button>
           <span
             className="font-manrope font-extrabold text-lg text-forest-800 tracking-tight cursor-pointer"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/')}
+            title="Go to home page"
           >
             CarbonX
           </span>
@@ -278,7 +284,7 @@ export default function Layout({ children }) {
             <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSidebarOpen(false)} />
             <aside className="fixed left-0 top-0 bottom-0 z-50 w-64 bg-white border-r border-forest-100 p-4 md:hidden flex flex-col">
               <div className="flex justify-between items-center mb-4">
-                <span className="font-manrope font-extrabold text-lg text-forest-800">CarbonX</span>
+                <span className="font-manrope font-extrabold text-lg text-forest-800 cursor-pointer" onClick={() => goTo('/')}>CarbonX</span>
                 <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-forest-50 rounded-xl">
                   <X size={18} />
                 </button>
