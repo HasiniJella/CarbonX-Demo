@@ -192,7 +192,7 @@ export default function FPODashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 w-full md:w-auto">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full md:w-auto">
             <div className="bg-surface-sage/50 border border-forest-200 border-l-4 border-l-emerald-600 rounded-xl p-3 text-center">
               <p className="text-[10px] font-semibold text-agriText-subtle uppercase">Members</p>
               <p className="text-xl font-bold text-carbon-900 mt-0.5">{farmersList.length}</p>

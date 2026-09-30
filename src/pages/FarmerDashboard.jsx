@@ -272,7 +272,7 @@ export default function FarmerDashboard() {
                 </button>
               </div>
 
-              <div className="h-[420px] rounded-2xl overflow-hidden border border-slate-200">
+              <div className="h-[320px] md:h-[420px] rounded-2xl overflow-hidden border border-slate-200">
                 <Suspense fallback={<div className="h-full flex items-center justify-center text-xs text-slate-500">Loading map…</div>}>
                 <LeafletMap
                   onGeojsonDrawn={setDrawnGeojson}

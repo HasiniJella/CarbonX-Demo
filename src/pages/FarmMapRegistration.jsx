@@ -181,7 +181,7 @@ export default function FarmMapRegistration() {
         )}
 
         {/* Interactive Leaflet Map Container */}
-        <div className="z-0 relative h-[520px] rounded-2xl overflow-hidden shadow-card border border-forest-100">
+        <div className="z-0 relative h-[380px] md:h-[520px] rounded-2xl overflow-hidden shadow-card border border-forest-100">
           <Suspense fallback={<div className="h-full flex items-center justify-center text-xs text-agriText-muted">Loading satellite map…</div>}>
           <LeafletMap
             readOnly={isReadOnly}

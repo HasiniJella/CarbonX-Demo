@@ -155,7 +155,7 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen bg-warm-white flex flex-col">
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-forest-100/60 flex justify-between items-center px-4 py-3 shadow-sm">
+      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-forest-100/60 flex justify-between items-center px-4 py-3 pt-safe shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -262,7 +262,7 @@ export default function Layout({ children }) {
       <OfflineBanner />
 
       {showNotifications && isAuthenticated && (
-        <div className="fixed top-14 right-4 z-40 bg-white border border-forest-100 rounded-2xl shadow-xl p-4 w-80 max-h-96 overflow-y-auto">
+        <div className="fixed top-14 right-4 z-40 bg-white border border-forest-100 rounded-2xl shadow-xl p-4 w-80 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-xs font-bold text-carbon-800">Notifications</h3>
             <button onClick={() => setShowNotifications(false)} className="p-1 hover:bg-forest-50 rounded-lg">
@@ -312,7 +312,7 @@ export default function Layout({ children }) {
 
       {isAuthenticated && role === 'farmer' && <FarmerVoiceAssistant />}
 
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-forest-100/50 py-2.5 px-4 flex justify-around items-center md:hidden shadow-lg">
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-forest-100/50 py-2.5 px-4 pb-safe flex justify-around items-center md:hidden shadow-lg">
         {navItems.slice(0, 5).map((item) => {
           const active = isActive(item.path);
           const Icon = item.icon;
