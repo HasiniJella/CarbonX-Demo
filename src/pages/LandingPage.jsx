@@ -10,20 +10,20 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#F8FAF8] font-inter text-slate-900">
       {/* Full-width Organic Green Header */}
-      <header className="sticky top-0 z-50 bg-[#1B4332] border-b border-emerald-900 text-white px-4 md:px-10 py-3.5 shadow-md">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-10 h-10 bg-[#2D6A4F] border border-emerald-500 rounded-xl flex items-center justify-center text-white shadow-sm">
+      <header className="sticky top-0 z-50 bg-[#1B4332] border-b border-emerald-900 text-white px-3 md:px-10 py-3 md:py-3.5 shadow-md">
+        <div className="max-w-7xl mx-auto flex justify-between items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 cursor-pointer min-w-0" onClick={() => navigate('/')}>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#2D6A4F] border border-emerald-500 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0">
               <Leaf className="w-5 h-5" />
             </div>
-            <div>
-              <span className="font-manrope font-extrabold text-xl tracking-tight block leading-tight text-white">CarbonX</span>
-              <span className="text-[10px] font-medium text-emerald-200">Enterprise AgTech & Carbon Infrastructure</span>
+            <div className="min-w-0">
+              <span className="font-manrope font-extrabold text-lg sm:text-xl tracking-tight block leading-tight text-white">CarbonX</span>
+              <span className="hidden sm:block text-[10px] font-medium text-emerald-200 truncate">Enterprise AgTech & Carbon Infrastructure</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 bg-[#2D6A4F]/60 border border-emerald-600 rounded-xl px-3 py-1.5 text-xs text-white">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <div className="flex items-center gap-1.5 bg-[#2D6A4F]/60 border border-emerald-600 rounded-xl px-2 sm:px-3 py-1.5 text-xs text-white">
               <Globe className="w-3.5 h-3.5 text-emerald-300" />
               <select
                 value={currentLang}
@@ -44,9 +44,10 @@ export default function LandingPage() {
 
             <button
               onClick={() => navigate('/role-selection')}
-              className="text-xs font-bold text-white bg-[#2D6A4F] hover:bg-[#40916C] px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-2 border border-emerald-500"
+              className="text-xs font-bold text-white bg-[#2D6A4F] hover:bg-[#40916C] px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-2 border border-emerald-500"
             >
-              <span>Get Started</span>
+              <span className="hidden min-[400px]:inline">Get Started</span>
+              <span className="min-[400px]:hidden">Start</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

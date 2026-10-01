@@ -155,8 +155,8 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen bg-warm-white flex flex-col">
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-forest-100/60 flex justify-between items-center px-4 py-3 pt-safe shadow-sm">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-forest-100/60 flex justify-between items-center gap-2 px-3 py-2 sm:px-4 sm:py-3 pt-safe shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 hover:bg-forest-50 rounded-xl text-carbon-700 transition-colors md:hidden"
@@ -164,21 +164,21 @@ export default function Layout({ children }) {
             <Menu size={20} />
           </button>
           <span
-            className="font-manrope font-extrabold text-lg text-forest-800 tracking-tight cursor-pointer"
+            className="font-manrope font-extrabold text-base sm:text-lg text-forest-800 tracking-tight cursor-pointer shrink-0"
             onClick={() => navigate('/')}
             title="Go to home page"
           >
             CarbonX
           </span>
           {isAuthenticated && (
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-wide ${roleMeta.classes}`}>
+            <span className={`hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-wide truncate ${roleMeta.classes}`}>
               {roleMeta.label}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 bg-forest-50/80 border border-forest-100 rounded-xl px-2.5 py-1 text-xs text-forest-900 font-semibold">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1 bg-forest-50/80 border border-forest-100 rounded-xl px-1.5 sm:px-2.5 py-1 text-xs text-forest-900 font-semibold">
             <Globe size={13} className="text-forest-700" />
             <select
               value={currentLang}
@@ -212,7 +212,7 @@ export default function Layout({ children }) {
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="p-2 hover:bg-rose-50 rounded-xl text-carbon-600 hover:text-rose-600 transition-colors"
+                  className="hidden sm:block p-2 hover:bg-rose-50 rounded-xl text-carbon-600 hover:text-rose-600 transition-colors"
                   title="Logout"
                 >
                   <LogOut size={18} />
