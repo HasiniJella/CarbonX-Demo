@@ -1,31 +1,50 @@
 import React from 'react';
 import { Smartphone } from 'lucide-react';
 
-// Pre-seeded demo farmer (scripts/seed_tier_demo.py): Tier-1 registry-hit
-// account, so judges can log in and verify land without waiting for SMS.
-export const DEMO_FARMER_PHONE = '9000000011';
-export const DEMO_FARMER_NAME = 'Ramesh Kumar';
+// Pre-seeded demo farmers (scripts/seed_tier_demo.py) so judges can view
+// every verification tier without waiting for SMS.
+export const DEMO_NUMBERS = [
+  { phone: '9000000011', name: 'Ramesh Kumar', tier: 'Tier 1 · Registry hit' },
+  { phone: '9000000012', name: 'Lakshmi Narayana', tier: 'Tier 2 · Document check' },
+  { phone: '9000000013', name: 'Mallaiah Yadav', tier: 'Tier 3 · FPO review' },
+];
+
+// Backwards-compatible default (Tier 1).
+export const DEMO_FARMER_PHONE = DEMO_NUMBERS[0].phone;
+export const DEMO_FARMER_NAME = DEMO_NUMBERS[0].name;
 
 export default function DemoNumberBanner({ onAutofill }) {
+  const fill = (phone) => {
+    if (!onAutofill) return;
+    // Supports both setPhone-style setters and no-arg callbacks.
+    if (onAutofill.length === 0) onAutofill();
+    else onAutofill(phone);
+  };
+
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
-      <div className="flex items-center gap-2.5 min-w-0">
+    <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-2">
+      <div className="flex items-center gap-2">
         <Smartphone className="w-5 h-5 text-amber-600 shrink-0" />
-        <p className="text-xs text-amber-900">
-          <span className="font-bold">SIH demo?</span> Use{' '}
-          <span className="font-mono font-bold tracking-widest">{DEMO_FARMER_PHONE}</span>
-          <span className="hidden sm:inline text-amber-700"> — pre-verified Tier-1 farm, no SMS wait</span>
+        <p className="text-xs font-bold text-amber-900">
+          SIH demo? Tap a number to autofill — pre-seeded farms, no SMS wait
         </p>
       </div>
-      {onAutofill && (
-        <button
-          type="button"
-          onClick={onAutofill}
-          className="shrink-0 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg transition-colors"
-        >
-          Autofill
-        </button>
-      )}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        {DEMO_NUMBERS.map((d) => (
+          <button
+            key={d.phone}
+            type="button"
+            onClick={() => fill(d.phone)}
+            className="flex items-center justify-between gap-2 px-3 py-2 bg-white hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors text-left"
+          >
+            <span>
+              <span className="block font-mono font-bold tracking-widest text-xs text-amber-900">{d.phone}</span>
+              <span className="block text-[10px] text-amber-700">{d.name} — {d.tier}</span>
+            </span>
+            <span className="shrink-0 px-2 py-1 bg-amber-600 text-white text-[10px] font-bold rounded-md">Use</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

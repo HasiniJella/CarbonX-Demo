@@ -202,7 +202,7 @@ export default function FarmerRegister() {
         </div>
 
         {/* Demo number for judges / SIH evaluators (Twilio trial can't SMS unverified numbers) */}
-        <DemoNumberBanner onAutofill={() => setPhone(DEMO_FARMER_PHONE)} />
+        <DemoNumberBanner onAutofill={(phone) => setPhone(phone || DEMO_FARMER_PHONE)} />
 
         {/* Onboarding Form */}
         <form onSubmit={handleSubmitForm} className="bg-white border border-slate-200 shadow-sm rounded-xl p-6 space-y-5">

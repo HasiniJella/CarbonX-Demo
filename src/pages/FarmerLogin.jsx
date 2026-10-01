@@ -164,7 +164,7 @@ export default function FarmerLogin() {
           </div>
 
           {/* Demo number for judges / SIH evaluators (Twilio trial can't SMS unverified numbers) */}
-          <DemoNumberBanner onAutofill={() => setPhone(DEMO_FARMER_PHONE)} />
+          <DemoNumberBanner onAutofill={(phone) => setPhone(phone || DEMO_FARMER_PHONE)} />
 
           {error && (
             <p className="text-xs font-bold text-red-700 bg-red-50 border border-red-200 p-2.5 rounded-xl text-center">
