@@ -4,6 +4,7 @@ import { Mic, Volume2, Phone, ShieldCheck, ArrowRight, CheckCircle2, Lock } from
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { sendOtp, verifyRegistrationOtp, registerUser } from '../services/api';
+import DemoNumberBanner, { DEMO_FARMER_PHONE } from '../components/DemoNumberBanner';
 
 export default function FarmerRegister() {
   const navigate = useNavigate();
@@ -199,6 +200,9 @@ export default function FarmerRegister() {
             </div>
           </div>
         </div>
+
+        {/* Demo number for judges / SIH evaluators (Twilio trial can't SMS unverified numbers) */}
+        <DemoNumberBanner onAutofill={() => setPhone(DEMO_FARMER_PHONE)} />
 
         {/* Onboarding Form */}
         <form onSubmit={handleSubmitForm} className="bg-white border border-slate-200 shadow-sm rounded-xl p-6 space-y-5">

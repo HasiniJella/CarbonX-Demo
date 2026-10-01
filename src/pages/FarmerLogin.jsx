@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Phone, ArrowRight, ShieldCheck, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { sendLoginOtp, loginUser } from '../services/api';
+import DemoNumberBanner, { DEMO_FARMER_PHONE } from '../components/DemoNumberBanner';
 
 export default function FarmerLogin() {
   const navigate = useNavigate();
@@ -161,6 +162,9 @@ export default function FarmerLogin() {
             <h1 className="text-2xl font-extrabold text-carbon-900 font-manrope">Sign In to CarbonX</h1>
             <p className="text-xs text-agriText-muted">Enter your mobile number to receive a 6-digit OTP.</p>
           </div>
+
+          {/* Demo number for judges / SIH evaluators (Twilio trial can't SMS unverified numbers) */}
+          <DemoNumberBanner onAutofill={() => setPhone(DEMO_FARMER_PHONE)} />
 
           {error && (
             <p className="text-xs font-bold text-red-700 bg-red-50 border border-red-200 p-2.5 rounded-xl text-center">
