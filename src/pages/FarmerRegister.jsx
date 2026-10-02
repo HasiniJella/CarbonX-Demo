@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mic, Volume2, Phone, ShieldCheck, ArrowRight, CheckCircle2, Lock } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
@@ -14,6 +14,7 @@ export default function FarmerRegister() {
   // Voice Assistance Simulation
   const [isListening, setIsListening] = useState(false);
   const [speechText, setSpeechText] = useState('');
+  const recognitionRef = useRef(null);
 
   // Form State
   const [name, setName] = useState('');
@@ -47,17 +48,60 @@ export default function FarmerRegister() {
   }, [timerActive, otpTimer]);
 
   const handleMicClick = () => {
+    // Tap again while listening to stop.
+    if (isListening) {
+      try { recognitionRef.current?.stop(); } catch { /* already stopped */ }
+      return;
+    }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      // Safari / Firefox have no SpeechRecognition — fall back to typing.
+      setSpeechText(t('regMicNotSupported'));
+      return;
+    }
+    const rec = new SR();
+    recognitionRef.current = rec;
+    rec.lang = currentLang === 'te' ? 'te-IN' : currentLang === 'hi' ? 'hi-IN' : 'en-IN';
+    rec.interimResults = true;
+    rec.continuous = false;
+    rec.maxAlternatives = 1;
     setIsListening(true);
     setSpeechText(t('regMicListening'));
-    setTimeout(() => {
+    rec.onresult = (e) => {
+      let interim = '';
+      let fin = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const tr = e.results[i][0]?.transcript || '';
+        if (e.results[i].isFinal) fin += tr;
+        else interim += tr;
+      }
+      const text = (fin || interim).trim();
+      if (text) setSpeechText(text);
+      // Dictation fills the name field — the farmer can edit it after.
+      if (fin.trim()) setName(fin.trim());
+    };
+    rec.onerror = (e) => {
       setIsListening(false);
-      setName('K. Ramesh');
-      setPhone('9876543210');
-      setMandal('Pochampally');
-      setVillage('Pochampally');
-      setSpeechText(t('regMicDone'));
-    }, 2500);
+      if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') {
+        setSpeechText(t('regMicBlocked'));
+      } else if (e?.error === 'no-speech' || e?.error === 'audio-capture') {
+        setSpeechText(t('regMicHint'));
+      }
+    };
+    rec.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+    try {
+      rec.start();
+    } catch {
+      setIsListening(false);
+    }
   };
+
+  useEffect(() => () => {
+    try { recognitionRef.current?.abort(); } catch { /* unmounted */ }
+  }, []);
 
   const handleIdChange = (val) => {
     setRawIdNumber(val);
