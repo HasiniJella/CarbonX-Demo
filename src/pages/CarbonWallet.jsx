@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Wallet, ArrowRight, ShieldCheck, CheckCircle2, Building, ArrowLeft, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function CarbonWallet() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const [totalEarned, setTotalEarned] = useState(4250.0);
   const [pendingEscrow, setPendingEscrow] = useState(1050.0);
@@ -87,14 +89,14 @@ export default function CarbonWallet() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[10px] font-bold text-primary uppercase tracking-wider bg-surface-sage border border-forest-200 px-2.5 py-0.5 rounded-full">
-                Financial Summary Ledger
+                {t('walBadge')}
               </span>
               <span className="text-[10px] font-semibold text-agriText-subtle bg-warm-cream px-2 py-0.5 rounded">
-                Simulated UPI Rails
+                {t('walSimRails')}
               </span>
             </div>
-            <h1 className="text-2xl font-extrabold text-carbon-900 font-manrope">Farmer Carbon Wallet</h1>
-            <p className="text-xs text-agriText-muted mt-0.5">Automated UPI settlements with transparent 2% platform fee breakdown.</p>
+            <h1 className="text-2xl font-extrabold text-carbon-900 font-manrope">{t('walTitle')}</h1>
+            <p className="text-xs text-agriText-muted mt-0.5">{t('walDesc')}</p>
           </div>
 
           <button
@@ -102,7 +104,7 @@ export default function CarbonWallet() {
             className="px-4 py-2.5 bg-surface-sage hover:bg-forest-100 border border-forest-200 text-carbon-800 rounded-xl text-xs font-bold transition-all flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to Dashboard</span>
+            <span>{t('walBackDashboard')}</span>
           </button>
         </div>
 
@@ -110,27 +112,27 @@ export default function CarbonWallet() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-surface-sage border border-forest-200 text-carbon-900 shadow-card rounded-2xl p-6 flex flex-col justify-between">
             <div>
-              <p className="text-[11px] font-semibold text-agriText-subtle uppercase tracking-wider">Total Lifetime Earned</p>
+              <p className="text-[11px] font-semibold text-agriText-subtle uppercase tracking-wider">{t('walTotalEarned')}</p>
               <p className="text-3xl font-extrabold font-manrope text-primary mt-2">
                 ₹{totalEarned.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </p>
             </div>
-            <p className="text-[11px] text-agriText-muted mt-4">Settled into linked bank account via simulated UPI</p>
+            <p className="text-[11px] text-agriText-muted mt-4">{t('walTotalEarnedDesc')}</p>
           </div>
 
           <div className="bg-white border border-forest-100 shadow-card rounded-2xl p-6 flex flex-col justify-between">
             <div>
-              <p className="text-[11px] font-semibold text-agriText-subtle uppercase tracking-wider">Pending Escrow Balance</p>
+              <p className="text-[11px] font-semibold text-agriText-subtle uppercase tracking-wider">{t('walPendingEscrow')}</p>
               <p className="text-3xl font-extrabold text-amber-700 font-manrope mt-2">
                 ₹{pendingEscrow.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </p>
             </div>
-            <p className="text-xs text-agriText-muted mt-4">Held in smart escrow until corporate purchase execution</p>
+            <p className="text-xs text-agriText-muted mt-4">{t('walPendingDesc')}</p>
           </div>
 
           <div className="bg-white border border-forest-100 shadow-card rounded-2xl p-6 flex flex-col justify-between">
             <div>
-              <p className="text-[11px] font-semibold text-agriText-subtle uppercase tracking-wider">Settled Withdrawable Balance</p>
+              <p className="text-[11px] font-semibold text-agriText-subtle uppercase tracking-wider">{t('walWithdrawable')}</p>
               <p className="text-3xl font-extrabold text-carbon-900 font-manrope mt-2">
                 ₹{withdrawableUpi.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </p>
@@ -141,7 +143,7 @@ export default function CarbonWallet() {
               className="mt-4 w-full py-2.5 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2"
             >
               <Wallet className="w-4 h-4" />
-              <span>Simulate Instant UPI Payout</span>
+              <span>{t('walSimPayout')}</span>
             </button>
           </div>
         </div>
@@ -150,12 +152,12 @@ export default function CarbonWallet() {
         <div className="bg-white border border-forest-100 shadow-card rounded-2xl p-6 space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-base font-bold text-carbon-900">Itemized Transaction Ledger</h2>
-              <p className="text-xs text-agriText-muted">Transparent breakdown showing 2% CarbonX platform fee deduction.</p>
+              <h2 className="text-base font-bold text-carbon-900">{t('walLedgerTitle')}</h2>
+              <p className="text-xs text-agriText-muted">{t('walLedgerDesc')}</p>
             </div>
 
             <span className="text-xs font-mono font-semibold text-primary bg-surface-sage border border-forest-200 px-3 py-1 rounded-full">
-              UPI VPA: {upiIdInput}
+              {t('walUpiVpaPre')}{upiIdInput}
             </span>
           </div>
 
@@ -163,14 +165,14 @@ export default function CarbonWallet() {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-forest-100 bg-surface-sage/40 text-agriText-muted font-semibold uppercase tracking-wider">
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Transaction ID</th>
-                  <th className="py-3 px-4">Source / Buyer</th>
-                  <th className="py-3 px-4">Credits Sold</th>
-                  <th className="py-3 px-4">Rate / Unit</th>
-                  <th className="py-3 px-4">2% Fee Deducted</th>
-                  <th className="py-3 px-4">Net Settled Amount</th>
-                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">{t('walThDate')}</th>
+                  <th className="py-3 px-4">{t('walThTxId')}</th>
+                  <th className="py-3 px-4">{t('walThSource')}</th>
+                  <th className="py-3 px-4">{t('walThCreditsSold')}</th>
+                  <th className="py-3 px-4">{t('walThRate')}</th>
+                  <th className="py-3 px-4">{t('walThFee')}</th>
+                  <th className="py-3 px-4">{t('walThNet')}</th>
+                  <th className="py-3 px-4">{t('walThStatus')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-forest-50 font-medium">
@@ -202,23 +204,23 @@ export default function CarbonWallet() {
               <div className="flex justify-between items-center border-b border-forest-100 pb-3">
                 <div className="flex items-center gap-2">
                   <Building className="w-5 h-5 text-primary" />
-                  <h3 className="text-sm font-bold text-carbon-900">Simulated UPI Bank Payout</h3>
+                  <h3 className="text-sm font-bold text-carbon-900">{t('walModalTitle')}</h3>
                 </div>
                 <span className="text-[10px] font-bold text-agriText-subtle bg-warm-cream px-2 py-0.5 rounded">
-                  Demo Mode
+                  {t('walDemoMode')}
                 </span>
               </div>
 
               {transferSuccess ? (
                 <div className="bg-surface-sage border border-forest-200 text-carbon-900 p-4 rounded-xl text-center space-y-2">
                   <CheckCircle2 className="w-8 h-8 text-primary mx-auto" />
-                  <p className="font-bold text-sm">Demo UPI Payout Dispatched!</p>
-                  <p className="text-xs text-agriText-muted">Simulated transfer completed to {selectedBank}.</p>
+                  <p className="font-bold text-sm">{t('walDispatchTitle')}</p>
+                  <p className="text-xs text-agriText-muted">{t('walDispatchPre')}{selectedBank}{t('walDispatchPost')}</p>
                 </div>
               ) : (
                 <form onSubmit={handleWithdrawSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-carbon-800 mb-1">Destination Bank Account</label>
+                    <label className="block text-xs font-bold text-carbon-800 mb-1">{t('walDestBank')}</label>
                     <select
                       value={selectedBank}
                       onChange={e => setSelectedBank(e.target.value)}
@@ -232,7 +234,7 @@ export default function CarbonWallet() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-carbon-800 mb-1">UPI VPA Handle</label>
+                    <label className="block text-xs font-bold text-carbon-800 mb-1">{t('walUpiHandle')}</label>
                     <input
                       type="text"
                       required
@@ -243,7 +245,7 @@ export default function CarbonWallet() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-carbon-800 mb-1">Withdrawal Amount (₹)</label>
+                    <label className="block text-xs font-bold text-carbon-800 mb-1">{t('walWithdrawAmt')}</label>
                     <input
                       type="number"
                       max={withdrawableUpi}
@@ -253,7 +255,7 @@ export default function CarbonWallet() {
                       onChange={e => setWithdrawAmt(e.target.value)}
                       className="w-full px-3 py-2 bg-surface-sage/40 border border-forest-200 rounded-xl text-sm font-bold text-carbon-900 focus:outline-none"
                     />
-                    <p className="text-[10px] text-agriText-subtle mt-1">Available balance: ₹{withdrawableUpi.toFixed(2)}</p>
+                    <p className="text-[10px] text-agriText-subtle mt-1">{t('walAvailPre')}{withdrawableUpi.toFixed(2)}</p>
                   </div>
 
                   <div className="flex gap-2 pt-2">
@@ -262,14 +264,14 @@ export default function CarbonWallet() {
                       onClick={() => setShowWithdrawModal(false)}
                       className="flex-1 py-2.5 bg-surface-sage border border-forest-200 text-carbon-800 rounded-xl text-xs font-bold hover:bg-forest-100"
                     >
-                      Cancel
+                      {t('mktCancel')}
                     </button>
                     <button
                       type="submit"
                       disabled={isTransferring}
                       className="flex-1 py-2.5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-hover flex items-center justify-center gap-1 shadow-sm"
                     >
-                      <span>{isTransferring ? 'Processing...' : 'Confirm Demo Transfer'}</span>
+                      <span>{isTransferring ? t('walProcessing') : t('walConfirmTransfer')}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>

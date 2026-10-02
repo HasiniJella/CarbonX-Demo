@@ -1,30 +1,32 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Compass, Leaf, Wallet, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function WelcomeTutorial() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [slideIndex, setSlideIndex] = useState(0);
 
   const steps = [
     {
       step: 1,
-      title: 'Satellite Land Mapping',
-      desc: 'Draw or auto-import your farm boundary. Sentinel-2 and ISRO Bhuvan satellite feeds index your parcel geometry automatically.',
+      title: t('tutStep1Title'),
+      desc: t('tutStep1Desc'),
       icon: Compass,
       bgColor: 'bg-emerald-50 text-emerald-800 border-emerald-200'
     },
     {
       step: 2,
-      title: 'Soil & Biomass Credits',
-      desc: 'AI and multi-spectral NDVI models compute your seasonal vegetative canopy and soil organic carbon sequestration yield.',
+      title: t('tutStep2Title'),
+      desc: t('tutStep2Desc'),
       icon: Leaf,
       bgColor: 'bg-sky-50 text-sky-800 border-sky-200'
     },
     {
       step: 3,
-      title: 'Direct UPI Payouts',
-      desc: 'Corporate buyers purchase your verified carbon credits. Earnings are transferred directly into your linked UPI bank account.',
+      title: t('tutStep3Title'),
+      desc: t('tutStep3Desc'),
       icon: Wallet,
       bgColor: 'bg-amber-50 text-amber-800 border-amber-200'
     }
@@ -70,7 +72,7 @@ export default function WelcomeTutorial() {
             onClick={() => navigate('/farmer/dashboard')}
             className="text-xs font-bold text-slate-500 hover:text-slate-900"
           >
-            Skip
+            {t('tutSkip')}
           </button>
         </div>
 
@@ -82,7 +84,7 @@ export default function WelcomeTutorial() {
 
           <div className="space-y-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Step {currentStep.step} of 3
+              {t('tutStepWord')} {currentStep.step} {t('tutOfWord')} 3
             </span>
             <h2 className="text-xl font-extrabold text-slate-900 font-manrope">{currentStep.title}</h2>
             <p className="text-xs text-slate-600 leading-relaxed">{currentStep.desc}</p>
@@ -94,7 +96,7 @@ export default function WelcomeTutorial() {
           onClick={handleNext}
           className="w-full py-3 bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2"
         >
-          <span>{slideIndex < steps.length - 1 ? 'Next Step' : 'Proceed to My Farm'}</span>
+          <span>{slideIndex < steps.length - 1 ? t('tutNextStep') : t('tutProceedFarm')}</span>
           <ArrowRight className="w-4 h-4" />
         </button>
 

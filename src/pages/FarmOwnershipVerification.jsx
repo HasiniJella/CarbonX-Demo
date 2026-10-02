@@ -7,11 +7,13 @@ import {
 import VerificationBadge from '../components/VerificationBadge';
 import { useAuth } from '../context/AuthContext';
 import { PY, verifyLandDocument } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function FarmOwnershipVerification() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   // Survey number carried over from registration decides the tier:
   // registry hit -> Tier 1 (auto, no documents), miss -> Tier 2 (upload).
@@ -42,12 +44,12 @@ export default function FarmOwnershipVerification() {
   const [fpoSubmitting, setFpoSubmitting] = useState(false);
 
   const trustChecklist = [
-    { title: '1. OCR Text Extraction', desc: 'Survey Number, Owner Name, Registered Area' },
-    { title: '2. Survey Number Found', desc: 'Validates a survey number was read from the document' },
-    { title: '3. Pattadar Owner Name Found', desc: 'Extracts the registered owner name' },
-    { title: '4. Extent / Area Found', desc: 'Reads the registered acreage from the Pahani' },
-    { title: '5. Registry Cross-Check', desc: 'Matches survey number against cadastral registry' },
-    { title: '6. Profile Name Match', desc: 'Compares document owner with farmer profile' },
+    { title: t('fovStep1Title'), desc: t('fovStep1Desc') },
+    { title: t('fovStep2Title'), desc: t('fovStep2Desc') },
+    { title: t('fovStep3Title'), desc: t('fovStep3Desc') },
+    { title: t('fovStep4Title'), desc: t('fovStep4Desc') },
+    { title: t('fovStep5Title'), desc: t('fovStep5Desc') },
+    { title: t('fovStep6Title'), desc: t('fovStep6Desc') },
   ];
 
   function _namesOverlap(a, b) {
@@ -104,16 +106,16 @@ export default function FarmOwnershipVerification() {
               docOwner: registryOwner,
               profileName,
               registryOwner,
-              reason: `Survey ${data.survey_number || survey} is registered to "${registryOwner}", not "${profileName}".`,
+              reason: t('fovSurveyRegPre') + (data.survey_number || survey) + t('fovSurveyRegMid1') + registryOwner + t('fovSurveyRegMid2') + profileName + t('fovSurveyRegPost'),
             });
             setVerificationStatus('NOT_VERIFIED');
             setVerificationMessage(
-              `Not Verified — this survey belongs to "${registryOwner}", not "${profileName}". Check the survey number or upload your own valid Pahani.`
+              t('fovNotVerBelongPre') + registryOwner + t('fovNotVerBelongMid') + profileName + t('fovNotVerBelongPost')
             );
           } else {
             setVerificationStatus('VERIFIED');
             setVerificationMessage(
-              `Verified — survey ${data.survey_number || survey} matches ${registryOwner} (${hasGeom ? 'Tier 1A' : 'Tier 1B'}). Continuing to map…`
+              t('fovVerSurveyPre') + (data.survey_number || survey) + t('fovVerSurveyMid') + registryOwner + t('fovVerSurveyPost1') + (hasGeom ? 'Tier 1A' : 'Tier 1B') + t('fovVerSurveyPost2')
             );
           }
           setIsSearching(false);
@@ -153,7 +155,7 @@ export default function FarmOwnershipVerification() {
           }
         });
         setVerificationStatus('VERIFIED');
-        setVerificationMessage('Verified — registry match. Continuing to map…');
+        setVerificationMessage(t('fovVerifiedRegistryMatch'));
       } else if (upperSurvey === '124/B' || upperSurvey === '102/B') {
         setRegistryResult({
           found: true,
@@ -171,7 +173,7 @@ export default function FarmOwnershipVerification() {
           geojson: null
         });
         setVerificationStatus('VERIFIED');
-        setVerificationMessage('Verified — registry record match (Tier 1B). Draw your boundary on the map…');
+        setVerificationMessage(t('fovVerifiedTier1B'));
       } else {
         setRegistryResult({
           found: false,
@@ -245,27 +247,27 @@ export default function FarmOwnershipVerification() {
           ocr = JSON.parse(rawText);
         } catch {
           throw new Error(
-            `Backend unreachable — ${PY} did not return JSON (HTTP ${ocrRes.status}). Check VITE_PY_API points at the backend. Your file is kept — use Tier 3 FPO review below.`
+            t('fovBackendNoJsonPre') + PY + t('fovBackendNoJsonMid1') + ocrRes.status + t('fovBackendNoJsonMid2')
           );
         }
       } else {
         throw new Error(
-          `Backend returned an empty response (HTTP ${ocrRes.status}) from ${PY}. The frontend cannot reach the OCR API — check VITE_PY_API. Your file is kept — use Tier 3 FPO review below.`
+          t('fovBackendEmptyPre') + ocrRes.status + t('fovBackendEmptyMid1') + PY + t('fovBackendEmptyMid2')
         );
       }
       if (!ocrRes.ok || !ocr.success) {
-        throw new Error(ocr.detail || ocr.message || 'OCR service unavailable');
+        throw new Error(ocr.detail || ocr.message || t('fovOcrUnavailable'));
       }
       const fields = ocr.fields || {};
       setOcrFields(fields);
       const hasText = Boolean((ocr.english_text || '').trim());
-      setStep(0, hasText, hasText ? 'Document text extracted' : 'No readable text found — upload a clear Pahani');
+      setStep(0, hasText, hasText ? t('fovDocExtracted') : t('fovNoReadableText'));
       const surveyNo = (fields.survey_no || '').trim();
-      setStep(1, Boolean(surveyNo), surveyNo || 'Missing — upload a valid land record');
+      setStep(1, Boolean(surveyNo), surveyNo || t('fovMissingValidRecord'));
       const owner = (fields.pattadar_name || '').trim();
-      setStep(2, Boolean(owner), owner || 'Missing — upload a valid land record');
+      setStep(2, Boolean(owner), owner || t('fovMissingValidRecord'));
       const area = fields.extent_acres || fields.extent_hectares;
-      setStep(3, area != null, area != null ? `${area} ${fields.extent_acres ? 'acres' : 'ha'}` : 'Missing');
+      setStep(3, area != null, area != null ? area + ' ' + (fields.extent_acres ? t('fovUnitAcres') : t('fovUnitHa')) : t('fovMissing'));
 
       // Registry cross-check on the extracted survey number.
       let registryFound = false;
@@ -285,24 +287,24 @@ export default function FarmOwnershipVerification() {
               reg = null;
             }
             if (!reg) {
-              setStep(4, false, 'Registry unreachable (non-JSON response)');
+              setStep(4, false, t('fovRegUnreachNonJson'));
             } else {
               registryFound = Boolean(reg.found);
               registryOwner = reg.owner_name || '';
               registryGeojson = reg.geojson || null;
               registryAreaHa = reg.area_ha ?? null;
               setStep(4, registryFound, registryFound
-                ? `Matched: ${reg.owner_name}, ${reg.area_ha} ha`
-                : 'Not in registry — Tier 2 document path');
+                ? t('fovMatchedPre') + reg.owner_name + ', ' + reg.area_ha + ' ' + t('fovUnitHa')
+                : t('fovNotInRegistry'));
             }
           } else {
-            setStep(4, false, 'Registry lookup failed — upload a valid document');
+            setStep(4, false, t('fovRegLookupFailed'));
           }
         } catch {
-          setStep(4, false, 'Registry unreachable');
+          setStep(4, false, t('fovRegUnreachable'));
         }
       } else {
-        setStep(4, false, 'No survey number to look up');
+        setStep(4, false, t('fovNoSurveyLookup'));
       }
 
       // Strict 3-way ownership check: doc vs profile vs registry.
@@ -313,16 +315,16 @@ export default function FarmOwnershipVerification() {
       const ownersAgree = docProfileOk && registryProfileOk && docRegistryOk;
       if (!ownersAgree) {
         const who = !docProfileOk
-          ? `Document owner "${owner || '—'}" does not match profile "${profileName || '—'}"`
+          ? t('fovDocOwnerMismatchPre') + (owner || '—') + t('fovDocOwnerMismatchMid1') + (profileName || '—') + t('fovDocOwnerMismatchPost')
           : !registryProfileOk
-            ? `Survey ${surveyNo} belongs to "${registryOwner}", not "${profileName}"`
-            : `Document owner "${owner}" does not match registry owner "${registryOwner}"`;
-        setStep(5, false, `${who} — REJECTED`);
+            ? t('fovSurveyRegPre') + surveyNo + t('fovSurveyBelongMid') + registryOwner + t('fovSurveyRegMid2') + profileName + t('fovSurveyRegPost')
+            : t('fovDocOwnerMismatchPre') + owner + t('fovDocRegMismatchMid') + registryOwner + t('fovDocOwnerMismatchPost');
+        setStep(5, false, who + t('fovRejectedSuffix'));
         setOwnerMismatch({ docOwner: owner, profileName, registryOwner, reason: who });
       } else {
         setStep(5, Boolean(owner) && Boolean(profileName), owner && profileName
-          ? `Document owner matches profile (${profileName})`
-          : 'Owner check needs profile + document names');
+          ? t('fovDocMatchesPre') + profileName + t('fovDocMatchesPost')
+          : t('fovOwnerCheckNeeds'));
       }
 
       // Tier-aware verdict. Registry miss (Tier 2) needs steps 1-3 + owner
@@ -334,7 +336,7 @@ export default function FarmOwnershipVerification() {
         const tierLabel = registryFound ? (registryGeojson ? 'Tier 1' : 'Tier 1B') : 'Tier 2';
         setVerificationStatus('VERIFIED');
         setVerificationMessage(
-          `Verified — survey ${surveyNo}, owner ${owner}. ${tierLabel} confirmed. Taking you to the map…`
+          t('fovVerSurveyPre') + surveyNo + t('fovVerOwnerMid') + owner + t('fovVerTierMid1') + tierLabel + t('fovVerTierMid2')
         );
         // Build the exact map payload: registry geometry wins for Tier 1A,
         // otherwise the Pahani boundary coords (doc) win, else registry.
@@ -391,19 +393,19 @@ export default function FarmOwnershipVerification() {
         }, 1400);
       } else {
         const reason = !docsComplete
-          ? 'This document does not look like a valid land record. Please upload a clear Pahani / RoR 1B.'
-          : `Not Verified — "${owner || 'unknown'}" does not match profile "${profileName}" / registry "${registryOwner || '—'}". Please upload YOUR valid document.`;
+          ? t('fovInvalidDoc')
+          : t('fovNotVerOwnerPre') + (owner || t('fovUnknown')) + t('fovNotVerOwnerMid1') + profileName + t('fovNotVerOwnerMid2') + (registryOwner || '—') + t('fovNotVerOwnerPost');
         setVerificationStatus('NOT_VERIFIED');
         setVerificationMessage(reason);
         setPipelineDone(true);
       }
     } catch (err) {
-      const msg = err.message || 'Document verification failed. Please upload a valid Pahani.';
+      const msg = err.message || t('fovDocVerifyFailed');
       setPipelineError(msg);
       // Mark every checklist step failed so the UI never sticks on checking...
-      setStepResults(trustChecklist.map(() => ({ passed: false, detail: 'Not reached — OCR request failed' })));
+      setStepResults(trustChecklist.map(() => ({ passed: false, detail: t('fovNotReachedOcr') })));
       setVerificationStatus('NOT_VERIFIED');
-      setVerificationMessage(`Not Verified — ${msg}`);
+      setVerificationMessage(t('fovNotVerifiedPre') + msg);
       setPipelineDone(true);
     } finally {
       setIsProcessingPipeline(false);
@@ -426,7 +428,7 @@ export default function FarmOwnershipVerification() {
     setRegistryResult(null);
     setSearchDone(false);
     setVerificationStatus(null);
-    setVerificationMessage('Registry shows another owner — continuing as Tier 2: upload YOUR Pahani, then map your boundary.');
+    setVerificationMessage(t('fovTier2ContMsg'));
     setOwnerMismatch(null);
     setProceedBlocked('');
     setPipelineDone(false);
@@ -461,14 +463,14 @@ export default function FarmOwnershipVerification() {
           state: { fpoPending: true, farmId: res.farm_id, status: res.status || 'FLAGGED' },
         });
       } else {
-        setProceedBlocked(res?.message || 'Could not send to FPO review. Please try again.');
+        setProceedBlocked(res?.message || t('fovFpoFail'));
       }
     } catch (err) {
       const raw = err?.message || '';
       setProceedBlocked(
         /json|Unexpected end|empty response|Failed to fetch|NetworkError/i.test(raw)
-          ? `Backend unreachable — ${PY} did not respond with JSON (HTTP error). Check VITE_PY_API points at the backend. Ask your FPO officer to verify manually.`
-          : (raw || 'Could not send to FPO review. Please try again.')
+          ? t('fovBackendFpoPre') + PY + t('fovBackendFpoMid')
+          : (raw || t('fovFpoFail'))
       );
     } finally {
       setFpoSubmitting(false);
@@ -480,12 +482,12 @@ export default function FarmOwnershipVerification() {
     // Hard gate: mismatched ownership must never reach the map.
     if (verificationStatus === 'NOT_VERIFIED' || registryResult.ownerMatch === false) {
       setProceedBlocked(
-        verificationMessage || 'Not Verified — this document does not belong to your profile. Please upload YOUR valid Pahani.'
+        verificationMessage || t('fovNotBelongProfile')
       );
       return;
     }
     if (verificationStatus !== 'VERIFIED') {
-      setProceedBlocked('Verification incomplete — complete the checks above before continuing to the map.');
+      setProceedBlocked(t('fovVerIncomplete'));
       return;
     }
     setProceedBlocked('');
@@ -513,11 +515,11 @@ export default function FarmOwnershipVerification() {
         <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block mb-1">
-              Step 1: Land Verification & Registry Lookup
+              {t('fovStepBadge')}
             </span>
-            <h1 className="text-2xl font-extrabold text-slate-900 font-manrope">Farm Ownership & Deed Verification</h1>
+            <h1 className="text-2xl font-extrabold text-slate-900 font-manrope">{t('fovTitle')}</h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Automated Trust Engine pipeline validating Telangana Pahani / RoR 1B records against Govt Cadastral Registry.
+              {t('fovSubtitle')}
             </p>
           </div>
 
@@ -537,18 +539,18 @@ export default function FarmOwnershipVerification() {
           <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-6 space-y-6">
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-700" />
-              <span>1. Survey Number Registry Lookup</span>
+              <span>{t('fovLookupTitle')}</span>
             </h2>
 
             <form onSubmit={handleRegistryLookup} className="space-y-3">
-              <label className="block text-xs font-bold text-slate-700">Survey / Passbook Number</label>
+              <label className="block text-xs font-bold text-slate-700">{t('fovSurveyLabel')}</label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <input
                     type="text"
                     value={surveyInput}
                     onChange={e => setSurveyInput(e.target.value)}
-                    placeholder="e.g. 124/A, 101/A, 102/B"
+                    placeholder={t('fovSurveyPlaceholder')}
                     className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-emerald-600"
                     required
                   />
@@ -560,7 +562,7 @@ export default function FarmOwnershipVerification() {
                   className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2 transition-all disabled:opacity-50"
                 >
                   {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                  <span>Lookup</span>
+                  <span>{t('fovLookupBtn')}</span>
                 </button>
               </div>
             </form>
@@ -574,19 +576,19 @@ export default function FarmOwnershipVerification() {
                   <>
                     <h2 className="text-base font-bold text-red-900 flex items-center gap-2">
                       <AlertCircle className="w-5 h-5 text-red-700" />
-                      <span>Not Verified — Ownership Mismatch</span>
+                      <span>{t('fovMismatchTitle')}</span>
                     </h2>
                     <p className="text-[11px] text-red-800 font-medium">
-                      {verificationMessage || `Survey ${registryResult.surveyNumber} belongs to "${registryResult.ownerName}", not "${user?.name}". Upload YOUR valid Pahani or check the survey number.`}
+                      {verificationMessage || (t('fovSurveyRegPre') + registryResult.surveyNumber + t('fovSurveyBelongMid') + registryResult.ownerName + t('fovSurveyRegMid2') + (user?.name || '') + t('fovMismatchFallbackPost'))}
                     </p>
                     <p className="text-[11px] text-red-700">
-                      This survey is registered to someone else — Tier 1 cannot apply. Continue as Tier 2 (your document + map) or send to FPO review.
+                      {t('fovTier1Blocked')}
                     </p>
                     <button
                       onClick={continueAsTier2}
                       className="w-full mt-2 py-2.5 bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2"
                     >
-                      <span>Continue as Tier 2 — Upload My Pahani</span>
+                      <span>{t('fovContinueTier2')}</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </>
@@ -594,14 +596,13 @@ export default function FarmOwnershipVerification() {
                   <>
                     <h2 className="text-base font-bold text-emerald-950 flex items-center gap-2">
                       <CheckCircle2 className="w-5 h-5 text-emerald-700" />
-                      <span>Tier {registryResult.tierCode} — Verified, Registry Match</span>
+                      <span>{t('fovTierPre')}{registryResult.tierCode}{t('fovTierVerifiedMatch')}</span>
                     </h2>
                     <p className="text-[11px] text-emerald-800">
-                      Survey {registryResult.surveyNumber} matched the cadastral registry
-                      (owner {registryResult.ownerName}, {registryResult.areaHa} ha).
+                      {t('fovSurveyMatchedPre')}{registryResult.surveyNumber}{t('fovSurveyMatchedMid')}{registryResult.ownerName}{t('fovSurveyMatchedMid2')}{registryResult.areaHa}{t('fovSurveyMatchedPost')}
                       {registryResult.hasGeometry
-                        ? ' The official boundary auto-loads on the mapping step.'
-                        : ' Confirm the details, then draw your boundary on the mapping step.'}
+                        ? t('fovBoundaryAuto')
+                        : t('fovBoundaryDraw')}
                     </p>
                   </>
                 )}
@@ -611,7 +612,7 @@ export default function FarmOwnershipVerification() {
             <div className="space-y-4">
               <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-emerald-700" />
-                <span>2. Pahani Document Drop-Zone & Verification (Tier 2)</span>
+                <span>{t('fovTier2Title')}</span>
               </h2>
 
               <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-emerald-600 bg-[#F8FAF8] transition-colors">
@@ -625,9 +626,9 @@ export default function FarmOwnershipVerification() {
                 <label htmlFor="doc-upload" className="cursor-pointer space-y-2 block">
                   <Upload className="w-8 h-8 text-emerald-700 mx-auto" />
                   <p className="text-xs font-bold text-slate-900">
-                    {pahaniFile ? pahaniFile.name : 'Upload Telangana Pahani / RoR 1B Document'}
+                    {pahaniFile ? pahaniFile.name : t('fovUploadDoc')}
                   </p>
-                  <p className="text-[10px] text-slate-500">Click to upload PNG, JPG, or PDF</p>
+                  <p className="text-[10px] text-slate-500">{t('fovUploadHint')}</p>
                 </label>
               </div>
 
@@ -649,20 +650,20 @@ export default function FarmOwnershipVerification() {
                       )}
                       <span className={`font-bold ${verificationStatus === 'NOT_VERIFIED' ? 'text-red-900' : 'text-emerald-950'}`}>
                         {isProcessingPipeline
-                          ? 'Running Pahani OCR checks...'
+                          ? t('fovRunningOcr')
                           : verificationStatus === 'NOT_VERIFIED'
-                            ? 'Not Verified — Upload a Valid Document'
+                            ? t('fovNotVerUploadValid')
                             : verificationStatus === 'VERIFIED'
-                              ? 'Verified — Taking You to Map…'
+                              ? t('fovVerifiedToMap')
                               : pipelineError
-                                ? 'Not Verified — Invalid Document'
+                                ? t('fovNotVerInvalid')
                                 : stepResults.every((s) => s?.passed)
-                                  ? 'Trust Engine Pipeline Passed'
-                                  : 'Trust Engine Pipeline — Review Needed'}
+                                  ? t('fovPipelinePassed')
+                                  : t('fovPipelineReview')}
                       </span>
                     </div>
                     <span className="text-[11px] font-mono font-bold text-emerald-800">
-                      {stepResults.filter((s) => s?.passed).length}/{trustChecklist.length} passed
+                      {stepResults.filter((s) => s?.passed).length}/{trustChecklist.length} {t('fovPassed')}
                     </span>
                   </div>
 
@@ -680,7 +681,7 @@ export default function FarmOwnershipVerification() {
                           )}
                           <div>
                             <span className="font-bold text-slate-900">{step.title}</span>
-                            <span className="text-slate-600"> — {r ? r.detail : 'checking...'}</span>
+                            <span className="text-slate-600"> — {r ? r.detail : t('fovChecking')}</span>
                           </div>
                         </div>
                       );
@@ -711,7 +712,7 @@ export default function FarmOwnershipVerification() {
                         className="w-full py-2.5 bg-red-700 hover:bg-red-600 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2"
                       >
                         <RefreshCw className="w-4 h-4" />
-                        <span>Re-upload Valid Document</span>
+                        <span>{t('fovReupload')}</span>
                       </button>
                       <button
                         onClick={requestFpoReview}
@@ -719,20 +720,19 @@ export default function FarmOwnershipVerification() {
                         className="w-full py-2.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2"
                       >
                         {fpoSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                        <span>{fpoSubmitting ? 'Sending to FPO…' : 'Tier 2 Failed — Send to FPO Review (Tier 3)'}</span>
+                        <span>{fpoSubmitting ? t('fovSendingFpo') : t('fovTier2FailedFpo')}</span>
                       </button>
                       <p className="text-[10px] text-slate-500 text-center">
-                        Document + map check failed — your parcel will be queued for FPO field verification.
+                        {t('fovDocMapFailed')}
                       </p>
                     </div>
                   )}
                   {pipelineDone && !pipelineError && ocrFields && verificationStatus !== 'NOT_VERIFIED' && verificationStatus !== 'VERIFIED' && (
                     <p className="text-[11px] text-emerald-800 font-medium">
-                      Extracted: survey {ocrFields.survey_no || '—'}, owner {ocrFields.pattadar_name || '—'},
-                      extent {ocrFields.extent_acres ?? ocrFields.extent_hectares ?? '—'}.
+                      {t('fovExtractedPre')}{ocrFields.survey_no || '—'}{t('fovExtractedMid1')}{ocrFields.pattadar_name || '—'}{t('fovExtractedMid2')}{ocrFields.extent_acres ?? ocrFields.extent_hectares ?? '—'}{t('fovExtractedPost')}
                       {stepResults[4] && !stepResults[4].passed
-                        ? ' Registry miss — continue as Tier 2 document path.'
-                        : ' Registry matched — Tier 1.'}
+                        ? t('fovRegMissTier2')
+                        : t('fovRegMatchedTier1')}
                     </p>
                   )}
                 </div>
@@ -744,7 +744,7 @@ export default function FarmOwnershipVerification() {
                   className="w-full py-2.5 bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2"
                 >
                   <ScanLine className="w-4 h-4" />
-                  <span>Run Automated Trust Engine Check</span>
+                  <span>{t('fovRunTrust')}</span>
                 </button>
               )}
             </div>
@@ -756,7 +756,7 @@ export default function FarmOwnershipVerification() {
             <div className="space-y-6">
               <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-emerald-700" />
-                <span>Extracted Record Metadata</span>
+                <span>{t('fovMetaTitle')}</span>
               </h2>
 
               {searchDone && registryResult ? (
@@ -764,12 +764,12 @@ export default function FarmOwnershipVerification() {
                   <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between">
                     <div>
                       <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block mb-1">
-                        Assigned Verification Badge
+                        {t('fovBadgeLabel')}
                       </span>
                       <VerificationBadge badge={registryResult.tier} showTier size="lg" />
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] font-semibold text-slate-500">Benchmark Price</p>
+                      <p className="text-[10px] font-semibold text-slate-500">{t('fovBenchPrice')}</p>
                       <p className="text-sm font-bold text-emerald-800">
                         {registryResult.tier === 'REGISTRY' ? 'INR 340 / credit' : registryResult.tier === 'REGISTRY_DOC' ? 'INR 320 / credit' : 'INR 310 / credit'}
                       </p>
@@ -778,26 +778,26 @@ export default function FarmOwnershipVerification() {
 
                   <div className="grid grid-cols-2 gap-4 bg-[#F8FAF8] p-4 rounded-xl border border-slate-200 text-xs">
                     <div>
-                      <span className="text-[10px] text-slate-500 font-semibold block">Pattadar Owner</span>
+                      <span className="text-[10px] text-slate-500 font-semibold block">{t('fovOwnerLabel')}</span>
                       <span className="font-bold text-slate-900">{registryResult.ownerName}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-500 font-semibold block">Survey Number</span>
+                      <span className="text-[10px] text-slate-500 font-semibold block">{t('regSurvey')}</span>
                       <span className="font-mono font-bold text-emerald-800">{registryResult.surveyNumber}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-500 font-semibold block">Village & Mandal</span>
+                      <span className="text-[10px] text-slate-500 font-semibold block">{t('fovVillageMandal')}</span>
                       <span className="font-bold text-slate-900">{registryResult.village}, {registryResult.mandal}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-500 font-semibold block">Pahani Acreage</span>
-                      <span className="font-bold text-slate-900">{registryResult.areaHa} ha ({Math.round(registryResult.areaHa * 2.471 * 100) / 100} Acres)</span>
+                      <span className="text-[10px] text-slate-500 font-semibold block">{t('fovAcreageLabel')}</span>
+                      <span className="font-bold text-slate-900">{registryResult.areaHa} {t('fovUnitHa')} ({Math.round(registryResult.areaHa * 2.471 * 100) / 100} {t('fovUnitAcresCap')})</span>
                     </div>
                   </div>
                 </div>
               ) : (
                 <div className="bg-[#F8FAF8] border border-slate-200 rounded-xl p-6 text-center text-xs text-slate-500">
-                  Lookup a survey number or upload Pahani document to display extracted metadata.
+                  {t('fovEmptyMeta')}
                 </div>
               )}
             </div>
@@ -806,12 +806,12 @@ export default function FarmOwnershipVerification() {
               <div className="space-y-2 mt-6">
                 {verificationStatus === 'NOT_VERIFIED' && (
                   <p className="text-[11px] font-bold text-red-800 bg-red-50 border border-red-200 p-2.5 rounded-xl text-center">
-                    Not Verified — disapproved. {verificationMessage || 'Upload YOUR valid document.'}
+                    {t('fovDisapprovedPre')}{verificationMessage || t('fovUploadYourValid')}
                   </p>
                 )}
                 {verificationStatus === 'VERIFIED' && (
                   <p className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl text-center">
-                    Verified — {verificationMessage || 'ownership confirmed.'}
+                    {t('fovVerifiedPreDash')}{verificationMessage || t('fovOwnershipConfirmed')}
                   </p>
                 )}
                 {proceedBlocked && (
@@ -824,7 +824,7 @@ export default function FarmOwnershipVerification() {
                   disabled={verificationStatus !== 'VERIFIED'}
                   className={`w-full py-3 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 ${verificationStatus === 'VERIFIED' ? 'bg-[#1B4332] hover:bg-[#2D6A4F] text-white' : 'bg-slate-200 text-slate-500 cursor-not-allowed'}`}
                 >
-                  <span>{verificationStatus === 'VERIFIED' ? 'Verified — Continue to Satellite Mapping' : verificationStatus === 'NOT_VERIFIED' ? 'Not Verified — Cannot Proceed' : 'Proceed to Satellite Boundary Mapping'}</span>
+                  <span>{verificationStatus === 'VERIFIED' ? t('fovContinueMapping') : verificationStatus === 'NOT_VERIFIED' ? t('fovCannotProceed') : t('fovProceedMapping')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>

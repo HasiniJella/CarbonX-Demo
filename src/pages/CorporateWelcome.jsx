@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Globe, ShieldCheck, ArrowRight, Layers, Sparkles, Building2, Info } from 'lucide-react';
 import BadgePill from '../components/BadgePill';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function CorporateWelcome() {
   const navigate = useNavigate();
   const { isAuthenticated, role, user } = useAuth();
+  const { t } = useLanguage();
   const isBuyer = role === 'buyer';
   const isFarmerSession = isAuthenticated && !isBuyer;
 
@@ -19,8 +21,8 @@ export default function CorporateWelcome() {
             <div className="flex items-start gap-2 flex-1">
               <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
               <p className="text-amber-900">
-                <span className="font-bold">You're signed in as {user?.name || 'a farmer'}.</span>{' '}
-                This portal is for companies — purchasing needs a separate company account.
+                <span className="font-bold">{t('cwelSignedInAs')} {user?.name || t('cwelFarmerFallback')}.</span>{' '}
+                {t('cwelPortalNote')}
               </p>
             </div>
             <div className="flex gap-2 shrink-0">
@@ -28,13 +30,13 @@ export default function CorporateWelcome() {
                 onClick={() => navigate('/corporate/login')}
                 className="px-4 py-2 bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl text-xs font-bold transition-all"
               >
-                Continue as Company
+                {t('cwelContinueCompany')}
               </button>
               <button
                 onClick={() => navigate('/dashboard')}
                 className="px-4 py-2 bg-white border border-amber-200 text-amber-900 rounded-xl text-xs font-bold hover:bg-amber-100 transition-all"
               >
-                Back to Dashboard
+                {t('cwelBackDashboard')}
               </button>
             </div>
           </div>
@@ -44,13 +46,13 @@ export default function CorporateWelcome() {
         <div className="bg-[#1B4332] text-white border border-emerald-900 shadow-sm rounded-xl p-8 relative overflow-hidden">
           <div className="max-w-3xl relative z-10 space-y-4">
             <span className="text-xs font-semibold text-emerald-300 uppercase tracking-wider bg-emerald-950 border border-emerald-700 px-3 py-1 rounded-full">
-              Enterprise Buyer Portal Gateway
+              {t('cwelGateway')}
             </span>
             <h1 className="text-3xl md:text-4xl font-extrabold font-manrope text-white">
-              High-Integrity Agricultural Carbon Offsets
+              {t('cwelHeroTitle')}
             </h1>
             <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
-              Procure verified carbon credits directly from Indian farmers. Built for BRSR reporting, Scope 1-3 neutrality compliance, and satellite-verified MRV auditability.
+              {t('cwelHeroSub')}
             </p>
 
             <div className="flex flex-wrap gap-4 pt-2">
@@ -58,7 +60,7 @@ export default function CorporateWelcome() {
                 onClick={() => navigate('/marketplace')}
                 className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2"
               >
-                <span>Explore Trading Marketplace</span>
+                <span>{t('cwelExploreMarket')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -67,12 +69,12 @@ export default function CorporateWelcome() {
                 className="px-6 py-3 bg-[#2D6A4F] hover:bg-[#40916C] text-[#D1FAE5] border border-emerald-500 rounded-xl text-xs font-bold transition-all flex items-center gap-2"
               >
                 <Sparkles className="w-4 h-4 text-emerald-300" />
-                <span>{isBuyer ? 'Run Bulk Auto-Match Engine' : 'Company Sign In to Buy'}</span>
+                <span>{isBuyer ? t('cwelBulkMatch') : t('cwelCompanySignIn')}</span>
               </button>
             </div>
             {!isBuyer && (
               <p className="text-[11px] text-slate-400">
-                Browsing is open to everyone — buying and bulk matching need a company account.
+                {t('cwelBrowseNote')}
               </p>
             )}
           </div>
@@ -80,31 +82,31 @@ export default function CorporateWelcome() {
 
         {/* Verification Badge Tiers Explanation */}
         <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-6 space-y-6">
-          <h2 className="text-lg font-bold text-slate-900">Institutional Verification Badge Hierarchy</h2>
+          <h2 className="text-lg font-bold text-slate-900">{t('cwelBadgeTitle')}</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-2">
               <BadgePill badge="REGISTRY" size="sm" />
-              <p className="text-xs font-bold text-slate-900 mt-2">Tier 1A: Cadastral Match</p>
-              <p className="text-[11px] text-slate-600">Locked registry boundary match. Trading benchmark: INR 340 / credit.</p>
+              <p className="text-xs font-bold text-slate-900 mt-2">{t('cwelTier1A')}</p>
+              <p className="text-[11px] text-slate-600">{t('cwelTier1ADesc')}</p>
             </div>
 
             <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-4 space-y-2">
               <BadgePill badge="REGISTRY_DOC" size="sm" />
-              <p className="text-xs font-bold text-slate-900 mt-2">Tier 1B: Pahani Record</p>
-              <p className="text-[11px] text-slate-600">Pahani deed with verified survey bounds. Benchmark: INR 320 / credit.</p>
+              <p className="text-xs font-bold text-slate-900 mt-2">{t('cwelTier1B')}</p>
+              <p className="text-[11px] text-slate-600">{t('cwelTier1BDesc')}</p>
             </div>
 
             <div className="bg-sky-50 border border-sky-200 rounded-xl p-4 space-y-2">
               <BadgePill badge="DOCUMENT" size="sm" />
-              <p className="text-xs font-bold text-slate-900 mt-2">Tier 2: OCR Validated</p>
-              <p className="text-[11px] text-slate-600">RoR 1B document with OCR validation. Benchmark: INR 310 / credit.</p>
+              <p className="text-xs font-bold text-slate-900 mt-2">{t('cwelTier2')}</p>
+              <p className="text-[11px] text-slate-600">{t('cwelTier2Desc')}</p>
             </div>
 
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-2">
               <BadgePill badge="FPO" size="sm" />
-              <p className="text-xs font-bold text-slate-900 mt-2">Tier 3: FPO Attestation</p>
-              <p className="text-[11px] text-slate-600">Attested by recognized FPO cooperative. Benchmark: INR 300 / credit.</p>
+              <p className="text-xs font-bold text-slate-900 mt-2">{t('cwelTier3')}</p>
+              <p className="text-[11px] text-slate-600">{t('cwelTier3Desc')}</p>
             </div>
           </div>
         </div>

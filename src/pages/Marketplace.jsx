@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Calendar, ShoppingCart, CheckCircle2, ChevronRight, Minus, Plus, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Marketplace() {
   const navigate = useNavigate();
   const { user, role } = useAuth();
+  const { t } = useLanguage();
   const isBuyer = role === 'buyer';
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -126,13 +128,13 @@ export default function Marketplace() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
             <div className="min-w-0">
-              <h1 className="text-2xl font-extrabold text-[#0F172A] font-manrope">Carbon Credit Marketplace</h1>
-              <p className="text-xs text-slate-500 mt-0.5">Direct agricultural carbon offset procurement from verified Telangana farms.</p>
+              <h1 className="text-2xl font-extrabold text-[#0F172A] font-manrope">{t('mktTitle')}</h1>
+              <p className="text-xs text-slate-500 mt-0.5">{t('mktSub')}</p>
               {!isBuyer && (
                 <p className="text-[11px] text-slate-500 mt-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2">
-                  Browsing{user?.name ? ` as ${user.name}` : ''} — purchasing needs a company account.{' '}
+                  {t('mktBrowseAs')}{user?.name ? ` ${user.name}` : ''} {t('mktNeedsCompany')}{' '}
                   <button onClick={() => navigate('/corporate/login')} className="font-bold text-emerald-800 hover:underline">
-                    Continue as Company →
+                    {t('mktContinueCompany')}
                   </button>
                 </p>
               )}
@@ -143,7 +145,7 @@ export default function Marketplace() {
               className="w-full sm:w-auto shrink-0 px-5 py-2.5 bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2"
             >
               <ShoppingCart className="w-4 h-4 text-emerald-300" />
-              <span className="whitespace-nowrap">Bulk Auto-Match Engine</span>
+              <span className="whitespace-nowrap">{t('mktBulkBtn')}</span>
             </button>
           </div>
 
@@ -152,7 +154,7 @@ export default function Marketplace() {
             <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search by crop or location..."
+              placeholder={t('mktSearchPh')}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full pl-11 pr-11 py-3.5 bg-white border border-slate-200 rounded-full text-sm text-slate-900 shadow-sm focus:outline-none focus:border-emerald-600 font-medium placeholder:text-slate-400"
@@ -169,8 +171,8 @@ export default function Marketplace() {
             )}
           </div>
           <p className="text-[11px] text-slate-500">
-            {filteredListings.length} listing{filteredListings.length === 1 ? '' : 's'}
-            {searchQuery && <> matching “{searchQuery}”</>}
+            {filteredListings.length} {filteredListings.length === 1 ? t('mktListing1') : t('mktListings')}
+            {searchQuery && <> {t('mktMatching')} “{searchQuery}”</>}
           </p>
         </div>
 
@@ -179,15 +181,15 @@ export default function Marketplace() {
           {filteredListings.length === 0 && (
             <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center">
               <Search className="w-8 h-8 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm font-bold text-slate-800">No listings found</p>
+              <p className="text-sm font-bold text-slate-800">{t('mktNoFound')}</p>
               <p className="text-xs text-slate-500 mt-1">
-                Nothing matches “{searchQuery}”. Try a crop (Paddy, Cotton) or a location (Chevella, Warangal).
+                {t('mktNoMatchHint')}
               </p>
               <button
                 onClick={() => setSearchQuery('')}
                 className="mt-4 px-5 py-2.5 bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl text-xs font-bold transition-all"
               >
-                Clear Search
+                {t('mktClearSearch')}
               </button>
             </div>
           )}
@@ -214,7 +216,7 @@ export default function Marketplace() {
 
                     <div className="flex items-center gap-1.5 font-medium">
                       <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
-                      <span>Available: {item.available}</span>
+                      <span>{t('mktAvailable')} {item.available}</span>
                     </div>
                   </div>
 
@@ -264,7 +266,7 @@ export default function Marketplace() {
                     onClick={() => handleBuyClick(item)}
                     className="px-5 py-2.5 bg-[#1B4332] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5"
                   >
-                    <span>Buy</span>
+                    <span>{t('mktBuy')}</span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -278,7 +280,7 @@ export default function Marketplace() {
           <div className="fixed inset-0 z-50 bg-[#1B4332]/60 backdrop-blur-xs flex items-center justify-center p-4">
             <div className="bg-white border border-slate-200 shadow-xl rounded-2xl p-6 max-w-md w-full space-y-4">
               <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                <h3 className="text-base font-bold text-[#0F172A]">Confirm Credit Escrow Purchase</h3>
+                <h3 className="text-base font-bold text-[#0F172A]">{t('mktModalTitle')}</h3>
                 <button onClick={() => setCheckoutModalItem(null)} className="p-1 hover:bg-slate-100 rounded-lg">
                   <X className="w-4 h-4 text-slate-500" />
                 </button>
@@ -287,26 +289,26 @@ export default function Marketplace() {
               {paymentSuccess ? (
                 <div className="bg-emerald-50 border border-emerald-200 text-emerald-950 p-4 rounded-xl text-center space-y-2">
                   <CheckCircle2 className="w-8 h-8 text-emerald-700 mx-auto" />
-                  <p className="font-bold text-sm">Escrow Credit Purchase Complete!</p>
-                  <p className="text-xs text-slate-600">Redirecting to official certificate...</p>
+                  <p className="font-bold text-sm">{t('mktSuccessT')}</p>
+                  <p className="text-xs text-slate-600">{t('mktSuccessS')}</p>
                 </div>
               ) : (
                 <div className="space-y-4 text-xs">
                   <div className="bg-[#F8FAF8] border border-slate-200 rounded-xl p-4 space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-slate-500 font-semibold">Crop Parcel:</span>
+                      <span className="text-slate-500 font-semibold">{t('mktCropParcel')}</span>
                       <span className="font-bold text-slate-900">{checkoutModalItem.crop} ({checkoutModalItem.farmer})</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500 font-semibold">Location:</span>
+                      <span className="text-slate-500 font-semibold">{t('mktLocation')}</span>
                       <span className="font-medium text-slate-800">{checkoutModalItem.location}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500 font-semibold">Selected Volume:</span>
+                      <span className="text-slate-500 font-semibold">{t('mktVolume')}</span>
                       <span className="font-mono font-bold text-emerald-800">{getQuantity(checkoutModalItem.id)} MT</span>
                     </div>
                     <div className="flex justify-between border-t border-slate-200 pt-2">
-                      <span className="text-slate-500 font-semibold">Total Escrow Value:</span>
+                      <span className="text-slate-500 font-semibold">{t('mktTotal')}</span>
                       <span className="font-mono font-bold text-slate-900">
                         ₹{(getQuantity(checkoutModalItem.id) * parseFloat(checkoutModalItem.price)).toLocaleString('en-IN')}
                       </span>
@@ -318,14 +320,14 @@ export default function Marketplace() {
                       onClick={() => setCheckoutModalItem(null)}
                       className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200"
                     >
-                      Cancel
+                      {t('mktCancel')}
                     </button>
                     <button
                       onClick={handleConfirmPurchase}
                       disabled={isProcessing}
                       className="flex-1 py-2.5 bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5"
                     >
-                      <span>{isProcessing ? 'Executing...' : 'Confirm & Lock Escrow'}</span>
+                      <span>{isProcessing ? t('mktExecuting') : t('mktConfirm')}</span>
                     </button>
                   </div>
                 </div>

@@ -6,11 +6,13 @@ import {
 } from 'lucide-react';
 import VerificationBadge from '../components/VerificationBadge';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { getFpoFarms, confirmFpoFarm, reviewFpoFarm } from '../services/api';
 
 export default function FPODashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('farmers');
 
   // FPO Org Context Switcher
@@ -62,9 +64,9 @@ export default function FPODashboard() {
     try {
       const res = await getFpoFarms('PENDING');
       if (res.success) setPendingQueue(res.farms || []);
-      else setPendingError(res.message || 'Could not load pending queue.');
+      else setPendingError(res.message || t('fpoErrPendingLoad'));
     } catch {
-      setPendingError('Could not reach the FPO review service.');
+      setPendingError(t('fpoErrReviewService'));
     } finally {
       setPendingLoading(false);
     }
@@ -76,9 +78,9 @@ export default function FPODashboard() {
     try {
       const res = await getFpoFarms('FLAGGED');
       if (res.success) setFlaggedFarms(res.farms || []);
-      else setAuditError(res.message || 'Could not load flagged farms.');
+      else setAuditError(res.message || t('fpoErrFlaggedLoad'));
     } catch {
-      setAuditError('Could not reach the FPO review service.');
+      setAuditError(t('fpoErrReviewService'));
     } finally {
       setAuditLoading(false);
     }
@@ -116,9 +118,9 @@ export default function FPODashboard() {
     try {
       const res = await confirmFpoFarm(id);
       if (res.success) await loadPending();
-      else setPendingError(res.message || 'Confirm failed.');
+      else setPendingError(res.message || t('fpoErrConfirm'));
     } catch {
-      setPendingError('Could not reach the FPO review service.');
+      setPendingError(t('fpoErrReviewService'));
     } finally {
       setPendingAction(null);
     }
@@ -129,9 +131,9 @@ export default function FPODashboard() {
     try {
       const res = await reviewFpoFarm(id, 'reject', 'Rejected from pending queue');
       if (res.success) await loadPending();
-      else setPendingError(res.message || 'Reject failed.');
+      else setPendingError(res.message || t('fpoErrReject'));
     } catch {
-      setPendingError('Could not reach the FPO review service.');
+      setPendingError(t('fpoErrReviewService'));
     } finally {
       setPendingAction(null);
     }
@@ -146,10 +148,10 @@ export default function FPODashboard() {
         setAuditNotes('');
         await loadFlagged();
       } else {
-        setAuditError(res.message || 'Review failed.');
+        setAuditError(res.message || t('fpoErrReview'));
       }
     } catch {
-      setAuditError('Could not reach the FPO review service.');
+      setAuditError(t('fpoErrReviewService'));
     } finally {
       setAuditAction(null);
     }
@@ -174,7 +176,7 @@ export default function FPODashboard() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[10px] font-bold text-primary uppercase tracking-wider bg-surface-sage border border-forest-200 px-2.5 py-0.5 rounded-full">
-                  FPO Command Desk
+                  {t('fpoCommandDesk')}
                 </span>
 
                 {/* FPO Context Switcher Toggle */}
@@ -188,21 +190,21 @@ export default function FPODashboard() {
                 </select>
               </div>
               <h1 className="text-2xl font-extrabold text-carbon-900 font-manrope">{fpoContext}</h1>
-              <p className="text-xs text-agriText-muted mt-0.5">Registration: FPO-TEL-2024-0894 | District: Yadadri Bhuvanagiri</p>
+              <p className="text-xs text-agriText-muted mt-0.5">{t('fpoRegistration')}: FPO-TEL-2024-0894 | {t('district')}: Yadadri Bhuvanagiri</p>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full md:w-auto">
             <div className="bg-surface-sage/50 border border-forest-200 border-l-4 border-l-emerald-600 rounded-xl p-3 text-center">
-              <p className="text-[10px] font-semibold text-agriText-subtle uppercase">Members</p>
+              <p className="text-[10px] font-semibold text-agriText-subtle uppercase">{t('fpoMembers')}</p>
               <p className="text-xl font-bold text-carbon-900 mt-0.5">{farmersList.length}</p>
             </div>
             <div className="bg-surface-sage/50 border border-forest-200 border-l-4 border-l-emerald-600 rounded-xl p-3 text-center">
-              <p className="text-[10px] font-semibold text-agriText-subtle uppercase">Total Acreage</p>
-              <p className="text-xl font-bold text-carbon-900 mt-0.5">342.5 Acres</p>
+              <p className="text-[10px] font-semibold text-agriText-subtle uppercase">{t('fpoTotalAcreage')}</p>
+              <p className="text-xl font-bold text-carbon-900 mt-0.5">342.5 {t('fpoAcres')}</p>
             </div>
             <div className="bg-surface-sage/50 border border-forest-200 border-l-4 border-l-emerald-600 rounded-xl p-3 text-center">
-              <p className="text-[10px] font-semibold text-agriText-subtle uppercase">Pooled Credits</p>
+              <p className="text-[10px] font-semibold text-agriText-subtle uppercase">{t('fpoPooledCredits')}</p>
               <p className="text-xl font-bold text-primary mt-0.5">1,420 MT</p>
             </div>
           </div>
@@ -211,11 +213,11 @@ export default function FPODashboard() {
         {/* 5 Tab Navigation Ribbon */}
         <div className="bg-white border border-forest-100 shadow-card rounded-2xl p-2 flex flex-wrap gap-2">
           {[
-            { id: 'farmers', label: 'My Farmers', icon: Users, count: farmersList.length },
-            { id: 'onboard', label: 'Bulk Member Onboarding', icon: PlusCircle },
-            { id: 'pending', label: 'Pending Queue', icon: FileText, count: pendingQueue.length },
-            { id: 'audit', label: 'Flagged Reviews (Padma Bai)', icon: AlertTriangle, count: 1, highlight: true },
-            { id: 'certificates', label: 'FPO Certificates', icon: Shield }
+            { id: 'farmers', label: t('fpoTabFarmers'), icon: Users, count: farmersList.length },
+            { id: 'onboard', label: t('fpoTabOnboard'), icon: PlusCircle },
+            { id: 'pending', label: t('fpoTabPending'), icon: FileText, count: pendingQueue.length },
+            { id: 'audit', label: `${t('fpoTabFlagged')} (Padma Bai)`, icon: AlertTriangle, count: 1, highlight: true },
+            { id: 'certificates', label: t('fpoTabCertificates'), icon: Shield }
           ].map(tab => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -248,8 +250,8 @@ export default function FPODashboard() {
           <div className="bg-white border border-forest-100 shadow-card rounded-2xl p-6 space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h2 className="text-lg font-bold text-carbon-900">Registered Cooperative Members</h2>
-                <p className="text-xs text-agriText-muted">Inspect member verification status, survey details, and carbon credits.</p>
+                <h2 className="text-lg font-bold text-carbon-900">{t('fpoMembersTitle')}</h2>
+                <p className="text-xs text-agriText-muted">{t('fpoMembersDesc')}</p>
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -257,7 +259,7 @@ export default function FPODashboard() {
                   <Search className="w-4 h-4 text-agriText-subtle absolute left-3 top-2.5" />
                   <input
                     type="text"
-                    placeholder="Search name or survey..."
+                    placeholder={t('fpoSearchPh')}
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 bg-surface-sage/40 border border-forest-200 rounded-xl text-xs text-carbon-900 focus:outline-none"
@@ -269,7 +271,7 @@ export default function FPODashboard() {
                   onChange={e => setBadgeFilter(e.target.value)}
                   className="bg-surface-sage/40 border border-forest-200 rounded-xl text-xs text-carbon-900 px-3 py-2 font-medium focus:outline-none"
                 >
-                  <option value="ALL">All Badges</option>
+                  <option value="ALL">{t('fpoAllBadges')}</option>
                   <option value="REGISTRY">REGISTRY</option>
                   <option value="REGISTRY_DOC">REGISTRY_DOC</option>
                   <option value="DOCUMENT">DOCUMENT</option>
@@ -283,14 +285,14 @@ export default function FPODashboard() {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-forest-100 bg-[#F8FAF8] text-agriText-muted font-semibold uppercase tracking-wider">
-                    <th className="py-3 px-4">Farmer ID</th>
-                    <th className="py-3 px-4">Legal Name</th>
-                    <th className="py-3 px-4">Phone (+91)</th>
-                    <th className="py-3 px-4">Survey Number</th>
-                    <th className="py-3 px-4">Parcel Acreage</th>
-                    <th className="py-3 px-4">Verification Badge</th>
-                    <th className="py-3 px-4">Carbon Credits</th>
-                    <th className="py-3 px-4">Action</th>
+                    <th className="py-3 px-4">{t('fpoThFarmerId')}</th>
+                    <th className="py-3 px-4">{t('fpoThLegalName')}</th>
+                    <th className="py-3 px-4">{t('fpoThPhone')}</th>
+                    <th className="py-3 px-4">{t('fpoThSurvey')}</th>
+                    <th className="py-3 px-4">{t('fpoThAcreage')}</th>
+                    <th className="py-3 px-4">{t('fpoThBadge')}</th>
+                    <th className="py-3 px-4">{t('fpoThCredits')}</th>
+                    <th className="py-3 px-4">{t('fpoThAction')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-forest-50">
@@ -315,7 +317,7 @@ export default function FPODashboard() {
                       <td className="py-3 px-4 font-bold text-carbon-900">{f.name}</td>
                       <td className="py-3 px-4 font-mono text-agriText-muted">{f.phone}</td>
                       <td className="py-3 px-4 font-medium text-carbon-800">{f.survey}</td>
-                      <td className="py-3 px-4 font-semibold text-carbon-900">{f.acres} Acres</td>
+                      <td className="py-3 px-4 font-semibold text-carbon-900">{f.acres} {t('fpoAcres')}</td>
                       <td className="py-3 px-4">
                         <VerificationBadge badge={f.badge} size="sm" />
                       </td>
@@ -337,7 +339,7 @@ export default function FPODashboard() {
                             })}
                             className="text-xs font-semibold text-[#1B4332] hover:underline flex items-center gap-1"
                           >
-                            <span>Dashboard</span>
+                            <span>{t('navDashboard')}</span>
                             <ExternalLink className="w-3 h-3" />
                           </button>
 
@@ -345,7 +347,7 @@ export default function FPODashboard() {
                             onClick={() => navigate(`/farmer/passport/${f.id}`)}
                             className="text-xs font-semibold text-slate-500 hover:text-slate-800 hover:underline flex items-center gap-1"
                           >
-                            <span>Passport</span>
+                            <span>{t('fpoPassport')}</span>
                           </button>
                         </div>
                       </td>
@@ -361,20 +363,20 @@ export default function FPODashboard() {
         {activeTab === 'onboard' && (
           <div className="bg-white border border-forest-100 shadow-card rounded-2xl p-6 space-y-6">
             <div>
-              <h2 className="text-lg font-bold text-carbon-900">Direct FPO Member Onboarding</h2>
-              <p className="text-xs text-agriText-muted">Register cooperative farmers directly to assign FPO Badge (₹300 benchmark price).</p>
+              <h2 className="text-lg font-bold text-carbon-900">{t('fpoOnboardTitle')}</h2>
+              <p className="text-xs text-agriText-muted">{t('fpoOnboardDesc')}</p>
             </div>
 
             {onboardSuccess && (
               <div className="bg-surface-sage border border-forest-200 text-primary p-4 rounded-xl text-xs flex items-center gap-3 font-semibold">
                 <CheckCircle2 className="w-5 h-5 text-primary" />
-                <span>Farmer successfully onboarded under FPO Attestation with FPO Verification Badge.</span>
+                <span>{t('fpoOnboardSuccess')}</span>
               </div>
             )}
 
             <form onSubmit={handleOnboardSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
               <div>
-                <label className="block text-xs font-bold text-carbon-800 mb-1">Legal Full Name</label>
+                <label className="block text-xs font-bold text-carbon-800 mb-1">{t('regLegalName')}</label>
                 <input
                   type="text"
                   required
@@ -386,7 +388,7 @@ export default function FPODashboard() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-carbon-800 mb-1">Mobile Phone (+91)</label>
+                <label className="block text-xs font-bold text-carbon-800 mb-1">{t('fpoPhoneLabel')}</label>
                 <input
                   type="text"
                   required
@@ -398,7 +400,7 @@ export default function FPODashboard() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-carbon-800 mb-1">Survey Parcel Number</label>
+                <label className="block text-xs font-bold text-carbon-800 mb-1">{t('fpoSurveyLabel')}</label>
                 <input
                   type="text"
                   required
@@ -410,7 +412,7 @@ export default function FPODashboard() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-carbon-800 mb-1">Parcel Acreage</label>
+                <label className="block text-xs font-bold text-carbon-800 mb-1">{t('fpoThAcreage')}</label>
                 <input
                   type="number"
                   step="0.1"
@@ -428,7 +430,7 @@ export default function FPODashboard() {
                   className="px-6 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2"
                 >
                   <PlusCircle className="w-4 h-4" />
-                  <span>Onboard Member & Issue FPO Badge</span>
+                  <span>{t('fpoOnboardBtn')}</span>
                 </button>
               </div>
             </form>
@@ -439,8 +441,8 @@ export default function FPODashboard() {
         {activeTab === 'pending' && (
           <div className="bg-white border border-forest-100 shadow-card rounded-2xl p-6 space-y-6">
             <div>
-              <h2 className="text-lg font-bold text-carbon-900">Pending Self-Registration Queue</h2>
-              <p className="text-xs text-agriText-muted">Review self-registered farmers awaiting FPO cooperative confirmation.</p>
+              <h2 className="text-lg font-bold text-carbon-900">{t('fpoPendingTitle')}</h2>
+              <p className="text-xs text-agriText-muted">{t('fpoPendingDesc')}</p>
             </div>
 
             {pendingLoading ? (
@@ -452,8 +454,8 @@ export default function FPODashboard() {
             ) : pendingQueue.length === 0 ? (
               <div className="text-center py-12 border-2 border-dashed border-forest-200 rounded-2xl">
                 <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-2" />
-                <p className="text-sm font-bold text-carbon-900">Queue Cleared</p>
-                <p className="text-xs text-agriText-muted">No pending self-registrations awaiting review.</p>
+                <p className="text-sm font-bold text-carbon-900">{t('fpoQueueCleared')}</p>
+                <p className="text-xs text-agriText-muted">{t('fpoQueueEmpty')}</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -466,7 +468,7 @@ export default function FPODashboard() {
                         <VerificationBadge badge="PENDING" size="sm" />
                       </div>
                       <p className="text-xs text-agriText-muted mt-1">
-                        Farmer: {p.owner_name || p.owner_phone} | Phone: {p.owner_phone} | {p.village ? `Village: ${p.village} | ` : ''}Area: {p.area_hectares} ha | Crop: {p.crop_type || '—'}
+                        {t('fpoLblFarmer')}: {p.owner_name || p.owner_phone} | {t('fpoLblPhone')}: {p.owner_phone} | {p.village ? `${t('village')}: ${p.village} | ` : ''}{t('areaLabel')}: {p.area_hectares} ha | {t('fpoLblCrop')}: {p.crop_type || '—'}
                       </p>
                     </div>
 
@@ -477,7 +479,7 @@ export default function FPODashboard() {
                         className="flex-1 md:flex-none px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50"
                       >
                         <Check className="w-4 h-4" />
-                        <span>{pendingAction === p.id ? 'Working...' : 'Approve under FPO Badge'}</span>
+                        <span>{pendingAction === p.id ? t('fpoWorking') : t('fpoApproveBadge')}</span>
                       </button>
                       <button
                         onClick={() => handleRejectPending(p.id)}
@@ -485,7 +487,7 @@ export default function FPODashboard() {
                         className="flex-1 md:flex-none px-4 py-2 bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
                       >
                         <X className="w-4 h-4" />
-                        <span>Reject</span>
+                        <span>{t('fpoReject')}</span>
                       </button>
                     </div>
                   </div>
@@ -501,12 +503,12 @@ export default function FPODashboard() {
             <div className="flex justify-between items-start">
               <div>
                 <span className="text-[10px] font-bold text-amber-900 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                  Ground-Truth Audit Inspector (Tier 3)
+                  {t('fpoAuditBadge')}
                 </span>
-                <h2 className="text-lg font-bold text-carbon-900 mt-1">Flagged Farm Reviews</h2>
-                <p className="text-xs text-agriText-muted">Approve under FPO badge or reject & block — writes to the live review ledger.</p>
+                <h2 className="text-lg font-bold text-carbon-900 mt-1">{t('fpoAuditTitle')}</h2>
+                <p className="text-xs text-agriText-muted">{t('fpoAuditDesc')}</p>
               </div>
-              <button onClick={loadFlagged} className="p-2 hover:bg-surface-sage rounded-lg" title="Refresh">
+              <button onClick={loadFlagged} className="p-2 hover:bg-surface-sage rounded-lg" title={t('fpoRefresh')}>
                 <RefreshCw className={`w-4 h-4 ${auditLoading ? 'animate-spin' : ''}`} />
               </button>
             </div>
@@ -518,8 +520,8 @@ export default function FPODashboard() {
                 <CheckCircle2 className="w-5 h-5" />
                 <span className="font-semibold">
                   {auditActionDone === 'APPROVED_FPO'
-                    ? 'Audit Action: Approved under FPO Attestation Badge.'
-                    : 'Audit Action: Farm flagged & blocked from credit earning.'}
+                    ? t('fpoAuditApproved')
+                    : t('fpoAuditRejected')}
                 </span>
               </div>
             )}
@@ -533,8 +535,8 @@ export default function FPODashboard() {
             ) : flaggedFarms.length === 0 ? (
               <div className="text-center py-12 border-2 border-dashed border-forest-200 rounded-2xl">
                 <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-2" />
-                <p className="text-sm font-bold text-carbon-900">No Flagged Farms</p>
-                <p className="text-xs text-agriText-muted">Area mismatches and unclear documents will appear here.</p>
+                <p className="text-sm font-bold text-carbon-900">{t('fpoNoFlagged')}</p>
+                <p className="text-xs text-agriText-muted">{t('fpoNoFlaggedDesc')}</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -546,11 +548,11 @@ export default function FPODashboard() {
                       <VerificationBadge badge="FLAGGED" size="sm" />
                     </div>
                     <p className="text-xs text-agriText-muted">
-                      Farmer: {f.owner_name || f.owner_phone} | Phone: {f.owner_phone} | {f.village ? `Village: ${f.village} | ` : ''}Area: {f.area_hectares} ha | Crop: {f.crop_type || '—'}
+                      {t('fpoLblFarmer')}: {f.owner_name || f.owner_phone} | {t('fpoLblPhone')}: {f.owner_phone} | {f.village ? `${t('village')}: ${f.village} | ` : ''}{t('areaLabel')}: {f.area_hectares} ha | {t('fpoLblCrop')}: {f.crop_type || '—'}
                     </p>
                     <textarea
                       rows={2}
-                      placeholder="Enter physical field inspection notes..."
+                      placeholder={t('fpoAuditPh')}
                       value={auditNotes}
                       onChange={e => setAuditNotes(e.target.value)}
                       className="w-full px-3 py-2 bg-white border border-forest-200 rounded-xl text-xs text-carbon-900 focus:outline-none"
@@ -562,7 +564,7 @@ export default function FPODashboard() {
                         className="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-xs disabled:opacity-50"
                       >
                         <Check className="w-4 h-4" />
-                        <span>{auditAction === f.id + 'approve' ? 'Working...' : 'Approve under FPO Badge'}</span>
+                        <span>{auditAction === f.id + 'approve' ? t('fpoWorking') : t('fpoApproveBadge')}</span>
                       </button>
                       <button
                         onClick={() => handleAuditDecision(f.id, 'reject')}
@@ -570,7 +572,7 @@ export default function FPODashboard() {
                         className="px-5 py-2.5 bg-red-700 hover:bg-red-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-xs disabled:opacity-50"
                       >
                         <X className="w-4 h-4" />
-                        <span>{auditAction === f.id + 'reject' ? 'Working...' : 'Reject & Block'}</span>
+                        <span>{auditAction === f.id + 'reject' ? t('fpoWorking') : t('fpoRejectBlock')}</span>
                       </button>
                     </div>
                   </div>

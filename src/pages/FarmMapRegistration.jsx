@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle2, AlertTriangle, ShieldCheck, Compass, Info, Ch
 import VerificationBadge from '../components/VerificationBadge';
 const LeafletMap = lazy(() => import('../components/LeafletMap'));
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 function geojsonToLatLngs(geojson) {
   try {
@@ -28,6 +29,7 @@ export default function FarmMapRegistration() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   // Received state from land-verification step
   const navState = location.state || {};
@@ -46,9 +48,9 @@ export default function FarmMapRegistration() {
   const mapInitialPoints = useMemo(() => geojsonToLatLngs(navState.geojson), [navState.geojson]);
   const mapCentroid = useMemo(() => centroidOf(mapInitialPoints), [mapInitialPoints]);
   const geometrySource = navState.geojson?.properties?.source === 'pahani'
-    ? 'Pahani document'
+    ? t('fmapSrcPahani')
     : navState.geojson
-      ? 'Govt cadastral registry'
+      ? t('fmapSrcRegistry')
       : null;
 
   // Live calculated state from map drawing
@@ -99,12 +101,12 @@ export default function FarmMapRegistration() {
         <div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-bold text-primary uppercase tracking-wider bg-surface-sage border border-forest-200 px-2.5 py-0.5 rounded-full">
-              Tier {tierCode} Mapping Verification
+              {t('fmapTierWord')} {tierCode} {t('fmapMappingVerif')}
             </span>
             <VerificationBadge badge={assignedBadge} showTier size="sm" />
           </div>
           <h1 className="text-lg font-extrabold text-carbon-900 font-manrope mt-1">
-            Parcel Geometry: Survey {surveyNumber} ({village})
+            {t('fmapParcelGeometry')} {t('fmapSurveyWord')} {surveyNumber} ({village})
           </h1>
         </div>
 
@@ -112,12 +114,12 @@ export default function FarmMapRegistration() {
         <div className="bg-surface-sage/60 border border-forest-200 rounded-xl px-4 py-2.5 text-xs flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div>
-              <span className="text-[10px] text-agriText-subtle font-semibold block uppercase tracking-wider">Registry/OCR Area</span>
+              <span className="text-[10px] text-agriText-subtle font-semibold block uppercase tracking-wider">{t('fmapRegistryArea')}</span>
               <span className="font-mono font-bold text-carbon-900">{registryAreaHa} ha</span>
             </div>
             <div className="h-6 border-r border-forest-200" />
             <div>
-              <span className="text-[10px] text-agriText-subtle font-semibold block uppercase tracking-wider">Drawn Area</span>
+              <span className="text-[10px] text-agriText-subtle font-semibold block uppercase tracking-wider">{t('fmapDrawnArea')}</span>
               <span className="font-mono font-bold text-primary">{drawnAreaHa} ha</span>
             </div>
           </div>
@@ -126,12 +128,12 @@ export default function FarmMapRegistration() {
             {isWithinTolerance ? (
               <span className="text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1.5">
                 <Check className="w-3.5 h-3.5 text-emerald-700" />
-                <span>Within tolerance ✓</span>
+                <span>{t('fmapWithinTol')}</span>
               </span>
             ) : (
               <span className="text-amber-800 font-bold bg-amber-50 border border-amber-200 px-3 py-1 rounded-full flex items-center gap-1.5">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-700" />
-                <span>Area mismatch — FPO review required</span>
+                <span>{t('fmapAreaMismatch')}</span>
               </span>
             )}
           </div>
@@ -147,12 +149,12 @@ export default function FarmMapRegistration() {
             <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
             <div>
               <h3 className="font-bold">
-                {verified ? 'Verified' : 'Located'} — Survey {surveyNumber} marked at exact {geometrySource || 'record'} coordinates
+                {verified ? t('fmapVerifiedWord') : t('fmapLocatedWord')} — {t('fmapSurveyWord')} {surveyNumber} {t('fmapMarkedAtExact')} {geometrySource || t('fmapRecordWord')} {t('fmapCoordinatesWord')}
               </h3>
               <p className="text-[11px] mt-0.5 font-mono">
                 {mapCentroid[0].toFixed(5)}, {mapCentroid[1].toFixed(5)}
-                {mapInitialPoints ? ` · ${mapInitialPoints.length} boundary vertices` : ''}
-                {isReadOnly ? ' · locked cadastral boundary (Tier 1A)' : ' · confirm or redraw to match field bunds'}
+                {mapInitialPoints ? <> · {mapInitialPoints.length} {t('fmapBoundaryVertices')}</> : ''}
+                {isReadOnly ? t('fmapLockedBoundary') : t('fmapConfirmRedraw')}
               </p>
             </div>
           </div>
@@ -164,16 +166,16 @@ export default function FarmMapRegistration() {
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
               <div className="flex-1">
-                <h3 className="font-bold text-amber-900">Area Mismatch Advisory (&gt;20% Variance Detected)</h3>
+                <h3 className="font-bold text-amber-900">{t('fmapMismatchTitle')}</h3>
                 <p className="text-[11px] text-amber-800 mt-0.5">
-                  Drawn area (<code className="font-mono font-bold">{drawnAreaHa} ha</code>) differs from record area (<code className="font-mono font-bold">{registryAreaHa} ha</code>) by {Math.round(variancePercent)}%. You can still submit; your farm will be queued for FPO review.
+                  {t('fmapMismatchA')} (<code className="font-mono font-bold">{drawnAreaHa} ha</code>) {t('fmapMismatchB')} (<code className="font-mono font-bold">{registryAreaHa} ha</code>) {t('fmapMismatchC')} {Math.round(variancePercent)}%. {t('fmapMismatchD')}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setShowAdvisory(false)}
               className="p-1 hover:bg-amber-100 rounded-lg text-amber-800 transition-colors"
-              title="Dismiss Advisory"
+              title={t('fmapDismissAdvisory')}
             >
               <X className="w-4 h-4" />
             </button>
@@ -182,13 +184,13 @@ export default function FarmMapRegistration() {
 
         {/* Interactive Leaflet Map Container */}
         <div className="z-0 relative h-[380px] md:h-[520px] rounded-2xl overflow-hidden shadow-card border border-forest-100">
-          <Suspense fallback={<div className="h-full flex items-center justify-center text-xs text-agriText-muted">Loading satellite map…</div>}>
+          <Suspense fallback={<div className="h-full flex items-center justify-center text-xs text-agriText-muted">{t('fmapLoadingMap')}</div>}>
           <LeafletMap
             readOnly={isReadOnly}
             initialPoints={mapInitialPoints}
             center={mapCentroid}
-            placeLabel={`Survey ${surveyNumber} · ${village}`}
-            subLabel={`${ownerName} · ${registryAreaHa} ha · Tier ${tierCode}`}
+            placeLabel={`${t('fmapSurveyWord')} ${surveyNumber} · ${village}`}
+            subLabel={`${ownerName} · ${registryAreaHa} ha · ${t('fmapTierWord')} ${tierCode}`}
             onAreaCalculated={handleAreaCalculated}
             showHeatmapToggle={true}
             height="100%"
@@ -202,11 +204,11 @@ export default function FarmMapRegistration() {
             {isReadOnly ? (
               <span className="flex items-center gap-1.5 text-emerald-800 font-semibold">
                 <ShieldCheck className="w-4 h-4 text-primary" />
-                Cadastral geometry verified from Telangana Dharani Portal (Tier 1A).
+                {t('fmapCadastralVerified')}
               </span>
             ) : (
               <span>
-                Draw polygon vertices on map to align with physical field bunds.
+                {t('fmapDrawHint')}
               </span>
             )}
           </div>
@@ -215,7 +217,7 @@ export default function FarmMapRegistration() {
             onClick={() => setShowConfirmationModal(true)}
             className="w-full sm:w-auto px-6 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-sm flex items-center justify-center gap-2 transition-all"
           >
-            <span>Confirm Boundary & Proceed</span>
+            <span>{t('fmapConfirmBoundary')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -229,7 +231,7 @@ export default function FarmMapRegistration() {
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-primary" />
                 <h3 className="text-sm font-extrabold text-carbon-900 font-manrope">
-                  Is this your land? Survey {surveyNumber}, {Math.round(drawnAreaHa * 2.471 * 10) / 10} acres, {village}
+                  {t('fmapIsThisYourLand')} {t('fmapSurveyWord')} {surveyNumber}, {Math.round(drawnAreaHa * 2.471 * 10) / 10} {t('fmapAcresWord')}, {village}
                 </h3>
               </div>
               <button
@@ -242,30 +244,30 @@ export default function FarmMapRegistration() {
 
             <div className="bg-surface-sage/50 border border-forest-200 rounded-xl p-4 space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-agriText-subtle font-semibold">Pattadar Owner:</span>
+                <span className="text-agriText-subtle font-semibold">{t('fmapOwnerLabel')}</span>
                 <span className="font-bold text-carbon-900">{ownerName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-agriText-subtle font-semibold">Survey Number:</span>
+                <span className="text-agriText-subtle font-semibold">{t('regSurvey')}:</span>
                 <span className="font-mono font-bold text-primary">{surveyNumber}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-agriText-subtle font-semibold">Village / Mandal:</span>
+                <span className="text-agriText-subtle font-semibold">{t('fmapVillageMandal')}</span>
                 <span className="font-bold text-carbon-900">{village}</span>
               </div>
               <div className="flex justify-between border-t border-forest-200 pt-2">
-                <span className="text-agriText-subtle font-semibold">Verified Area:</span>
+                <span className="text-agriText-subtle font-semibold">{t('fmapVerifiedArea')}</span>
                 <span className="font-mono font-bold text-primary">{drawnAreaHa} ha ({Math.round(drawnAreaHa * 2.471 * 100) / 100} acres)</span>
               </div>
               <div className="flex justify-between items-center border-t border-forest-200 pt-2">
-                <span className="text-agriText-subtle font-semibold">Assigned Tier Badge:</span>
+                <span className="text-agriText-subtle font-semibold">{t('fmapAssignedBadge')}</span>
                 <VerificationBadge badge={assignedBadge} showTier size="sm" />
               </div>
             </div>
 
             {!isWithinTolerance && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-900">
-                ⚠️ Notice: Area variance is outside ±20%. Your submission will be routed to your FPO coordinator for verification review.
+                {t('fmapVarianceNotice')}
               </div>
             )}
 
@@ -275,14 +277,14 @@ export default function FarmMapRegistration() {
                 className="flex-1 py-2.5 bg-surface-sage border border-forest-200 text-carbon-800 text-xs font-bold rounded-xl hover:bg-forest-100 transition-all flex items-center justify-center gap-1.5"
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                <span>Edit Polygon</span>
+                <span>{t('fmapEditPolygon')}</span>
               </button>
               <button
                 onClick={handleFinalSubmit}
                 className="flex-1 py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5"
               >
                 <Check className="w-3.5 h-3.5" />
-                <span>Confirm & Submit</span>
+                <span>{t('fmapConfirmSubmit')}</span>
               </button>
             </div>
           </div>

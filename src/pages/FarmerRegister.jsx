@@ -8,7 +8,7 @@ import DemoNumberBanner, { DEMO_FARMER_PHONE } from '../components/DemoNumberBan
 
 export default function FarmerRegister() {
   const navigate = useNavigate();
-  const { currentLang } = useLanguage();
+  const { currentLang, t } = useLanguage();
   const { login } = useAuth();
 
   // Voice Assistance Simulation
@@ -48,14 +48,14 @@ export default function FarmerRegister() {
 
   const handleMicClick = () => {
     setIsListening(true);
-    setSpeechText(currentLang === 'te' ? 'నమస్కారం! మీ పేరు మరియు వివరాలు మాట్లాడండి...' : 'Listening... Speak your legal name and village.');
+    setSpeechText(t('regMicListening'));
     setTimeout(() => {
       setIsListening(false);
       setName('K. Ramesh');
       setPhone('9876543210');
       setMandal('Pochampally');
       setVillage('Pochampally');
-      setSpeechText(currentLang === 'te' ? 'వాయిస్ గుర్తింపు పూర్తయింది: K. Ramesh (Pochampally)' : 'Voice input captured: K. Ramesh (Pochampally)');
+      setSpeechText(t('regMicDone'));
     }, 2500);
   };
 
@@ -80,7 +80,7 @@ export default function FarmerRegister() {
     try {
       const res = await sendOtp(phone);
       if (!res.success) {
-        setOtpError(res.message || 'Failed to send OTP. Please try again.');
+        setOtpError(res.message || t('regErrSendOtp'));
         return;
       }
 
@@ -94,7 +94,7 @@ export default function FarmerRegister() {
       setTimerActive(true);
       setOtpTimer(600);
     } catch (error) {
-      setOtpError('Could not reach the OTP service. Please try again.');
+      setOtpError(t('regErrOtpService'));
     } finally {
       setIsSendingOtp(false);
     }
@@ -103,7 +103,7 @@ export default function FarmerRegister() {
   const handleVerifyOtpSubmit = async (e) => {
     e.preventDefault();
     if (otp.length !== 6) {
-      setOtpError('Invalid 6-digit OTP code');
+      setOtpError(t('regErrInvalidOtp'));
       return;
     }
 
@@ -113,7 +113,7 @@ export default function FarmerRegister() {
     try {
       const verifyRes = await verifyRegistrationOtp(phone, otp);
       if (!verifyRes.success) {
-        setOtpError(verifyRes.message || 'Invalid or expired OTP');
+        setOtpError(verifyRes.message || t('regErrVerifyOtp'));
         return;
       }
 
@@ -134,7 +134,7 @@ export default function FarmerRegister() {
 
       const regRes = await registerUser(userData);
       if (!regRes.success) {
-        setOtpError(regRes.message || 'Registration failed. Please try again.');
+        setOtpError(regRes.message || t('regErrRegFailed'));
         return;
       }
 
@@ -147,7 +147,7 @@ export default function FarmerRegister() {
         state: surveyNumber.trim() ? { surveyNumber: surveyNumber.trim() } : undefined,
       });
     } catch (error) {
-      setOtpError('Registration could not be completed. Please try again.');
+      setOtpError(t('regErrRegIncomplete'));
     } finally {
       setIsRegistering(false);
     }
@@ -167,10 +167,10 @@ export default function FarmerRegister() {
         <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-6 flex justify-between items-center">
           <div>
             <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block mb-1">
-              Farmer Onboarding Portal
+              {t('regBadge')}
             </span>
-            <h1 className="text-2xl font-extrabold text-slate-900 font-manrope">Voice & OTP Farmer Registration</h1>
-            <p className="text-xs text-slate-500 mt-0.5">Automated identity onboarding for Telangana carbon credit enrollment.</p>
+            <h1 className="text-2xl font-extrabold text-slate-900 font-manrope">{t('regTitle')}</h1>
+            <p className="text-xs text-slate-500 mt-0.5">{t('regDesc')}</p>
           </div>
           <ShieldCheck className="w-10 h-10 text-emerald-700" />
         </div>
@@ -191,11 +191,11 @@ export default function FarmerRegister() {
               <div className="flex items-center gap-2">
                 <Volume2 className="w-4 h-4 text-emerald-400" />
                 <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider">
-                  {currentLang === 'te' ? 'వాయిస్ సహాయం (Telugu / Eng)' : 'Voice-First Input Guidance'}
+                  {currentLang === 'te' ? 'వాయిస్ సహాయం (Telugu / Eng)' : t('regVoiceGuide')}
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-0.5">
-                {speechText || (currentLang === 'te' ? 'మైక్ క్లిక్ చేసి మాట్లాడండి' : 'Click mic to speak your name, village & details')}
+                {speechText || t('regMicHint')}
               </p>
             </div>
           </div>
@@ -208,11 +208,11 @@ export default function FarmerRegister() {
         <form onSubmit={handleSubmitForm} className="bg-white border border-slate-200 shadow-sm rounded-xl p-6 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Legal Full Name</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">{t('regLegalName')}</label>
               <input
                 type="text"
                 required
-                placeholder="e.g. K. Ramesh"
+                placeholder={t('regLegalPh')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-2.5 bg-[#F8FAF8] border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
@@ -220,11 +220,11 @@ export default function FarmerRegister() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Number (+91)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">{t('regMobile')}</label>
               <input
                 type="text"
                 required
-                placeholder="e.g. 9876543210"
+                placeholder={t('regMobilePh')}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full px-3 py-2.5 bg-[#F8FAF8] border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
@@ -232,7 +232,7 @@ export default function FarmerRegister() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Identification Proof Type</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">{t('regIdType')}</label>
               <select
                 value={idType}
                 onChange={(e) => setIdType(e.target.value)}
@@ -245,11 +245,11 @@ export default function FarmerRegister() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Identification Number (Masked)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">{t('regIdNum')}</label>
               <input
                 type="text"
                 required
-                placeholder="Enter ID (e.g. 123456783210)"
+                placeholder={t('regIdPh')}
                 value={rawIdNumber}
                 onChange={(e) => handleIdChange(e.target.value)}
                 className="w-full px-3 py-2.5 bg-[#F8FAF8] border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-600 font-mono"
@@ -257,13 +257,13 @@ export default function FarmerRegister() {
               {maskedId && (
                 <div className="mt-1 flex items-center gap-1 text-[10px] font-mono text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                   <Lock className="w-3 h-3 text-emerald-600" />
-                  <span>Privacy Masked Output: {maskedId}</span>
+                  <span>{t('regPrivacyMask')} {maskedId}</span>
                 </div>
               )}
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">District</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">{t('regDistrict')}</label>
               <select
                 value={district}
                 onChange={(e) => setDistrict(e.target.value)}
@@ -276,7 +276,7 @@ export default function FarmerRegister() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Mandal</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">{t('regMandal')}</label>
               <input
                 type="text"
                 value={mandal}
@@ -286,7 +286,7 @@ export default function FarmerRegister() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Village Name</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">{t('regVillage')}</label>
               <input
                 type="text"
                 value={village}
@@ -297,11 +297,11 @@ export default function FarmerRegister() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Survey Number <span className="font-semibold text-slate-400">(decides verification tier)</span>
+                {t('regSurvey')} <span className="font-semibold text-slate-400">{t('regSurveyHint')}</span>
               </label>
               <input
                 type="text"
-                placeholder="e.g. 101/A — registry hit = Tier 1, miss = Tier 2"
+                placeholder={t('regSurveyPh')}
                 value={surveyNumber}
                 onChange={(e) => setSurveyNumber(e.target.value)}
                 className="w-full px-3 py-2.5 bg-[#F8FAF8] border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-600 font-mono"
@@ -314,7 +314,7 @@ export default function FarmerRegister() {
             disabled={isSendingOtp}
             className="w-full py-3 bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 mt-4 disabled:opacity-60"
           >
-            <span>{isSendingOtp ? 'Sending OTP...' : 'Generate OTP Verification'}</span>
+            <span>{isSendingOtp ? t('regSendingOtp') : t('regGenerateOtp')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
@@ -326,7 +326,7 @@ export default function FarmerRegister() {
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
                   <Phone className="w-5 h-5 text-emerald-700" />
-                  <h3 className="text-sm font-bold text-slate-900">OTP Verification</h3>
+                  <h3 className="text-sm font-bold text-slate-900">{t('regOtpTitle')}</h3>
                 </div>
                 <span className="text-xs font-mono font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded">
                   {formatTimer(otpTimer)}
@@ -334,12 +334,12 @@ export default function FarmerRegister() {
               </div>
 
               <p className="text-xs text-slate-600">
-                A 6-digit authentication code has been dispatched to <span className="font-bold text-slate-900">+91 {phone}</span>.
+                {t('regOtpSentTo')} <span className="font-bold text-slate-900">+91 {phone}</span>.
               </p>
 
               {devOtp && (
                 <div className="bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 text-xs text-amber-800 font-mono font-bold text-center">
-                  🔧 Dev mode — SMS not sent. OTP: <span className="text-lg tracking-widest">{devOtp}</span>
+                  🔧 {t('devModeLabel')} <span className="text-lg tracking-widest">{devOtp}</span>
                 </div>
               )}
 
@@ -351,7 +351,7 @@ export default function FarmerRegister() {
 
               <form onSubmit={handleVerifyOtpSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Enter 6-Digit Code</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{t('regEnterCode')}</label>
                   <input
                     type="text"
                     maxLength={6}
@@ -369,14 +369,14 @@ export default function FarmerRegister() {
                     onClick={() => setShowOtpModal(false)}
                     className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200"
                   >
-                    Cancel
+                    {t('regCancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={isRegistering}
                     className="flex-1 py-2.5 bg-emerald-700 text-white rounded-lg text-xs font-bold hover:bg-emerald-600 flex items-center justify-center gap-1 disabled:opacity-60"
                   >
-                    <span>{isRegistering ? 'Verifying...' : 'Verify & Route'}</span>
+                    <span>{isRegistering ? t('regVerifying') : t('regVerifyRoute')}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>

@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, Phone, ArrowRight, ShieldCheck, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { loginFpo, sendOtp } from '../services/api';
 
 export default function FPOLogin() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t } = useLanguage();
 
   const telanganaFpos = [
     'Yaadadri Laxmi Narsimha Farmers Producer Company (Mothkur)',
@@ -44,7 +46,7 @@ export default function FPOLogin() {
   const handleSendOtpSubmit = async (e) => {
     e.preventDefault();
     if (phone.length < 10) {
-      setError('Please enter a valid 10-digit mobile number');
+      setError(t('errValidPhone'));
       return;
     }
     setError('');
@@ -56,7 +58,7 @@ export default function FPOLogin() {
       const res = await sendOtp(phone);
 
       if (!res.success) {
-        setError(res.message || 'Failed to send OTP. Please try again.');
+        setError(res.message || t('regErrSendOtp'));
         return;
       }
 
@@ -72,7 +74,7 @@ export default function FPOLogin() {
       setCountdown(60);
       setCanResend(false);
     } catch {
-      setError('Could not reach the OTP service. Please try again.');
+      setError(t('errOtpService'));
     } finally {
       setIsSendingOtp(false);
     }
@@ -88,7 +90,7 @@ export default function FPOLogin() {
       const res = await sendOtp(phone);
 
       if (!res.success) {
-        setError(res.message || 'Failed to resend OTP. Please try again.');
+        setError(res.message || t('fpoLoginErrResend'));
         return;
       }
 
@@ -102,7 +104,7 @@ export default function FPOLogin() {
       setCountdown(60);
       setCanResend(false);
     } catch {
-      setError('Could not resend OTP. Please try again.');
+      setError(t('errResendOtp'));
     } finally {
       setIsSendingOtp(false);
     }
@@ -128,7 +130,7 @@ export default function FPOLogin() {
     e.preventDefault();
     const fullOtp = otpDigits.join('');
     if (fullOtp.length !== 6) {
-      setError('Please enter complete 6-digit OTP');
+      setError(t('errOtpIncomplete'));
       return;
     }
 
@@ -137,13 +139,13 @@ export default function FPOLogin() {
     try {
       const fpoRes = await loginFpo(phone, selectedFpo, fullOtp);
       if (!fpoRes.success) {
-        setError(fpoRes.message || 'Invalid OTP. Please try again.');
+        setError(fpoRes.message || t('fpoLoginErrInvalid'));
         return;
       }
       await login(fpoRes.token, fpoRes.user);
       navigate('/fpo/dashboard');
     } catch {
-      setError('Could not reach the FPO authentication service.');
+      setError(t('fpoLoginErrAuth'));
     } finally {
       setIsVerifying(false);
     }
@@ -161,14 +163,14 @@ export default function FPOLogin() {
             </div>
             <div className="flex items-center justify-center gap-1.5">
               <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                Authorized FPO / Cooperative Desk
+                {t('fpoLoginBadge')}
               </span>
               <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
-                Cooperative
+                {t('fpoLoginCoop')}
               </span>
             </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 font-manrope">FPO Officer Sign In</h1>
-            <p className="text-xs text-slate-500">Access member roster, bulk onboarding & credit pooling desk.</p>
+            <h1 className="text-2xl font-extrabold text-slate-900 font-manrope">{t('fpoLoginTitle')}</h1>
+            <p className="text-xs text-slate-500">{t('fpoLoginDesc')}</p>
           </div>
 
           {error && (
@@ -180,7 +182,7 @@ export default function FPOLogin() {
           {!showOtp ? (
             <form onSubmit={handleSendOtpSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Registered Telangana FPO / Cooperative</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{t('fpoLoginFpoLabel')}</label>
                 <select
                   value={selectedFpo}
                   onChange={(e) => setSelectedFpo(e.target.value)}
@@ -193,7 +195,7 @@ export default function FPOLogin() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Officer Mobile Number (+91)</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{t('fpoLoginPhoneLabel')}</label>
                 <div className="flex bg-[#F8FAF8] border border-slate-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-600/30">
                   <span className="bg-emerald-50 text-emerald-800 px-3 py-2.5 text-xs font-bold border-r border-slate-200 flex items-center">
                     +91
@@ -215,7 +217,7 @@ export default function FPOLogin() {
                 disabled={isSendingOtp}
                 className="w-full py-3 bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <span>{isSendingOtp ? 'Sending OTP...' : 'Send Officer 6-Digit OTP'}</span>
+                <span>{isSendingOtp ? t('sendingOtpBtn') : t('fpoLoginSendOtp')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -223,12 +225,12 @@ export default function FPOLogin() {
             <form onSubmit={handleVerifyOtpSubmit} className="space-y-4">
               {devOtp && (
                 <div className="bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 text-xs text-amber-800 font-mono font-bold text-center">
-                  🔧 Dev mode — SMS not sent. OTP: <span className="text-lg tracking-widest">{devOtp}</span>
+                  🔧 {t('devModeLabel')} <span className="text-lg tracking-widest">{devOtp}</span>
                 </div>
               )}
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1.5 text-center">
-                  Enter 6-Digit Officer Verification Code
+                  {t('fpoLoginOtpTitle')}
                 </label>
                 <div className="flex justify-between gap-1.5 max-w-xs mx-auto">
                   {otpDigits.map((digit, idx) => (
@@ -249,10 +251,10 @@ export default function FPOLogin() {
               <div className="flex justify-between items-center bg-[#F8FAF8] border border-slate-200 rounded-xl p-2.5 text-xs text-slate-600">
                 <span>
                   {canResend ? (
-                    <span className="text-slate-800 font-semibold">Didn't receive code?</span>
+                    <span className="text-slate-800 font-semibold">{t('noCode')}</span>
                   ) : (
                     <span>
-                      Resend code in <strong className="font-mono text-emerald-800 font-bold">{countdown}s</strong>
+                      {t('resendInX')} <strong className="font-mono text-emerald-800 font-bold">{countdown}s</strong>
                     </span>
                   )}
                 </span>
@@ -267,7 +269,7 @@ export default function FPOLogin() {
                   }`}
                 >
                   <RefreshCw className="w-3 h-3" />
-                  <span>Resend OTP</span>
+                  <span>{t('resendOtpBtn')}</span>
                 </button>
               </div>
 
@@ -276,7 +278,7 @@ export default function FPOLogin() {
                 disabled={isVerifying}
                 className="w-full py-3 bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <span>{isVerifying ? 'Authenticating FPO Officer...' : 'Verify & Access FPO Desk'}</span>
+                <span>{isVerifying ? t('fpoLoginVerifying') : t('fpoLoginVerifyBtn')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -284,7 +286,7 @@ export default function FPOLogin() {
 
           <div className="text-center pt-2 border-t border-slate-100">
             <p className="text-xs text-slate-500">
-              Selected FPO: <strong className="text-slate-800 truncate block">{selectedFpo}</strong>
+              {t('fpoLoginSelected')} <strong className="text-slate-800 truncate block">{selectedFpo}</strong>
             </p>
           </div>
         </div>

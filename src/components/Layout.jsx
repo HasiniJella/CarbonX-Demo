@@ -11,51 +11,51 @@ import FarmerVoiceAssistant from '../features/voice-agent/FarmerVoiceAssistant';
 
 const ROLE_NAV = {
   farmer: [
-    { name: 'Home', path: '/', icon: Sprout },
-    { name: 'Dashboard', path: '/farmer/dashboard', icon: Home },
-    { name: 'Land Verification', path: '/farmer/land-verification', icon: ShieldCheck },
-    { name: 'Carbon Passport', path: '/farmer/passport/TEL-124A', icon: Compass },
-    { name: 'Marketplace', path: '/marketplace', icon: ShoppingCart },
-    { name: 'Wallet & UPI Ledger', path: '/farmer/wallet', icon: Wallet },
-    { name: 'Support', path: '/support', icon: ClipboardList },
+    { label: 'navHome', path: '/', icon: Sprout },
+    { label: 'navDashboard', path: '/farmer/dashboard', icon: Home },
+    { label: 'navLandVerification', path: '/farmer/land-verification', icon: ShieldCheck },
+    { label: 'navCarbonPassport', path: '/farmer/passport/TEL-124A', icon: Compass },
+    { label: 'navMarketplace', path: '/marketplace', icon: ShoppingCart },
+    { label: 'navWalletLedger', path: '/farmer/wallet', icon: Wallet },
+    { label: 'navSupport', path: '/support', icon: ClipboardList },
   ],
   fpo: [
-    { name: 'Home', path: '/', icon: Sprout },
-    { name: 'FPO Dashboard', path: '/fpo/dashboard', icon: Building2 },
-    { name: 'Credit Pooling', path: '/fpo/credit-pooling', icon: ShieldCheck },
-    { name: 'Marketplace', path: '/marketplace', icon: ShoppingCart },
-    { name: 'Support', path: '/support', icon: ClipboardList },
+    { label: 'navHome', path: '/', icon: Sprout },
+    { label: 'navFpoDashboard', path: '/fpo/dashboard', icon: Building2 },
+    { label: 'navCreditPooling', path: '/fpo/credit-pooling', icon: ShieldCheck },
+    { label: 'navMarketplace', path: '/marketplace', icon: ShoppingCart },
+    { label: 'navSupport', path: '/support', icon: ClipboardList },
   ],
   buyer: [
-    { name: 'Home', path: '/', icon: Sprout },
-    { name: 'ESG Dashboard', path: '/corporate/dashboard', icon: Home },
-    { name: 'Marketplace', path: '/marketplace', icon: ShoppingCart },
-    { name: 'Bulk Auto-Match', path: '/marketplace/checkout', icon: BarChart3 },
-    { name: 'Certificates', path: '/buyer/certificates/CX-2026-CERT-00123', icon: ShieldCheck },
-    { name: 'Support', path: '/support', icon: ClipboardList },
+    { label: 'navHome', path: '/', icon: Sprout },
+    { label: 'navEsgDashboard', path: '/corporate/dashboard', icon: Home },
+    { label: 'navMarketplace', path: '/marketplace', icon: ShoppingCart },
+    { label: 'navBulkAutoMatch', path: '/marketplace/checkout', icon: BarChart3 },
+    { label: 'navCertificates', path: '/buyer/certificates/CX-2026-CERT-00123', icon: ShieldCheck },
+    { label: 'navSupport', path: '/support', icon: ClipboardList },
   ],
   verifier: [
-    { name: 'Home', path: '/', icon: Sprout },
-    { name: 'FPO Audit Desk', path: '/fpo/dashboard', icon: Home },
-    { name: 'Admin Compliance', path: '/admin/dashboard', icon: ShieldCheck },
-    { name: 'Marketplace', path: '/marketplace', icon: ShoppingCart },
-    { name: 'Support', path: '/support', icon: ClipboardList },
+    { label: 'navHome', path: '/', icon: Sprout },
+    { label: 'navFpoAuditDesk', path: '/fpo/dashboard', icon: Home },
+    { label: 'navAdminCompliance', path: '/admin/dashboard', icon: ShieldCheck },
+    { label: 'navMarketplace', path: '/marketplace', icon: ShoppingCart },
+    { label: 'navSupport', path: '/support', icon: ClipboardList },
   ],
   admin: [
-    { name: 'Home', path: '/', icon: Sprout },
-    { name: 'Admin Dashboard', path: '/admin/dashboard', icon: Home },
-    { name: 'FPO Desk', path: '/fpo/dashboard', icon: Building2 },
-    { name: 'Marketplace', path: '/marketplace', icon: ShoppingCart },
-    { name: 'Support', path: '/support', icon: ClipboardList },
+    { label: 'navHome', path: '/', icon: Sprout },
+    { label: 'navAdminDashboard', path: '/admin/dashboard', icon: Home },
+    { label: 'navFpoDesk', path: '/fpo/dashboard', icon: Building2 },
+    { label: 'navMarketplace', path: '/marketplace', icon: ShoppingCart },
+    { label: 'navSupport', path: '/support', icon: ClipboardList },
   ],
 };
 
 const ROLE_META = {
-  farmer:   { label: 'Farmer',          classes: 'bg-emerald-50 text-emerald-800 border border-emerald-200' },
-  fpo:      { label: 'FPO Officer',     classes: 'bg-amber-50 text-amber-800 border border-amber-200' },
-  buyer:    { label: 'Corporate Buyer', classes: 'bg-sky-50 text-sky-800 border border-sky-200' },
-  verifier: { label: 'Verifier',        classes: 'bg-amber-50 text-amber-800 border border-amber-200' },
-  admin:    { label: 'Admin Audit',     classes: 'bg-rose-50 text-rose-800 border border-rose-200' },
+  farmer:   { label: 'roleFarmer',   classes: 'bg-emerald-50 text-emerald-800 border border-emerald-200' },
+  fpo:      { label: 'roleFpo',      classes: 'bg-amber-50 text-amber-800 border border-amber-200' },
+  buyer:    { label: 'roleBuyer',    classes: 'bg-sky-50 text-sky-800 border border-sky-200' },
+  verifier: { label: 'roleVerifier', classes: 'bg-amber-50 text-amber-800 border border-amber-200' },
+  admin:    { label: 'roleAdmin',    classes: 'bg-rose-50 text-rose-800 border border-rose-200' },
 };
 
 export default function Layout({ children }) {
@@ -129,14 +129,14 @@ export default function Layout({ children }) {
         }`}
       >
         <Icon size={18} className={active ? 'text-forest-700' : 'text-carbon-400'} />
-        <span>{item.name}</span>
+        <span>{t(item.label)}</span>
       </button>
     );
   });
 
   const renderUserBlock = () => (
     <div className="pt-3 border-t border-forest-100">
-      <button onClick={() => goTo(dashboardPath)} title="Open my dashboard"
+      <button onClick={() => goTo(dashboardPath)} title={t('openDashboard')}
         className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-forest-50 transition-colors text-left">
         <div className="w-9 h-9 bg-forest-100 flex items-center justify-center text-xs font-bold text-forest-800 rounded-full shrink-0">
           {initials}
@@ -166,13 +166,13 @@ export default function Layout({ children }) {
           <span
             className="font-manrope font-extrabold text-base sm:text-lg text-forest-800 tracking-tight cursor-pointer shrink-0"
             onClick={() => navigate('/')}
-            title="Go to home page"
+            title={t('navHome')}
           >
             CarbonX
           </span>
           {isAuthenticated && (
             <span className={`hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-wide truncate ${roleMeta.classes}`}>
-              {roleMeta.label}
+              {t(roleMeta.label)}
             </span>
           )}
         </div>
@@ -213,7 +213,7 @@ export default function Layout({ children }) {
                 <button
                   onClick={handleLogout}
                   className="hidden sm:block p-2 hover:bg-rose-50 rounded-xl text-carbon-600 hover:text-rose-600 transition-colors"
-                  title="Logout"
+                  title={t('logoutMenu')}
                 >
                   <LogOut size={18} />
                 </button>
@@ -224,25 +224,25 @@ export default function Layout({ children }) {
                     <p className="text-xs font-bold text-carbon-800 truncate">{displayName}</p>
                     {displayLocation && <p className="text-[10px] text-carbon-400 truncate">{displayLocation}</p>}
                     <span className={`inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-wide ${roleMeta.classes}`}>
-                      {roleMeta.label}
+                      {t(roleMeta.label)}
                     </span>
                   </div>
                   <button onClick={() => goTo(dashboardPath)}
                     className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-carbon-700 hover:bg-forest-50 transition-colors">
-                    <Home size={16} className="text-carbon-400" /><span>My Dashboard</span>
+                    <Home size={16} className="text-carbon-400" /><span>{t('myDashboard')}</span>
                   </button>
                   <button onClick={() => goTo(walletPath)}
                     className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-carbon-700 hover:bg-forest-50 transition-colors">
-                    <Wallet size={16} className="text-carbon-400" /><span>Wallet</span>
+                    <Wallet size={16} className="text-carbon-400" /><span>{t('walletMenu')}</span>
                   </button>
                   <button onClick={() => goTo('/support')}
                     className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-carbon-700 hover:bg-forest-50 transition-colors">
-                    <ClipboardList size={16} className="text-carbon-400" /><span>Support</span>
+                    <ClipboardList size={16} className="text-carbon-400" /><span>{t('supportMenu')}</span>
                   </button>
                   <div className="border-t border-forest-50 mt-1 pt-1">
                     <button onClick={handleLogout}
                       className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors">
-                      <LogOut size={16} /><span>Logout</span>
+                      <LogOut size={16} /><span>{t('logoutMenu')}</span>
                     </button>
                   </div>
                 </div>
@@ -253,7 +253,7 @@ export default function Layout({ children }) {
               onClick={() => navigate('/farmer-login')}
               className="text-xs font-bold text-forest-800 hover:text-forest-900 px-3 py-1.5 rounded-xl hover:bg-forest-50 transition-colors"
             >
-              Login
+              {t('loginMenu')}
             </button>
           )}
         </div>
@@ -264,12 +264,12 @@ export default function Layout({ children }) {
       {showNotifications && isAuthenticated && (
         <div className="fixed top-14 right-4 z-40 bg-white border border-forest-100 rounded-2xl shadow-xl p-4 w-80 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto">
           <div className="flex justify-between items-center mb-3">
-            <h3 className="text-xs font-bold text-carbon-800">Notifications</h3>
+            <h3 className="text-xs font-bold text-carbon-800">{t('notifTitle')}</h3>
             <button onClick={() => setShowNotifications(false)} className="p-1 hover:bg-forest-50 rounded-lg">
               <X size={14} />
             </button>
           </div>
-          <p className="text-xs text-carbon-400 text-center py-4">No notifications yet</p>
+          <p className="text-xs text-carbon-400 text-center py-4">{t('notifEmpty')}</p>
         </div>
       )}
 
@@ -297,7 +297,7 @@ export default function Layout({ children }) {
                     className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
                   >
                     <LogOut size={16} />
-                    <span>Logout</span>
+                    <span>{t('logoutMenu')}</span>
                   </button>
                 </div>
               )}
@@ -326,7 +326,7 @@ export default function Layout({ children }) {
                 <Icon size={20} className={active ? 'text-forest-800' : 'text-carbon-400'} />
               </div>
               <span className={`text-[10px] font-bold mt-0.5 ${active ? 'text-carbon-800' : 'text-carbon-400'}`}>
-                {item.name}
+                {t(item.label)}
               </span>
             </button>
           );

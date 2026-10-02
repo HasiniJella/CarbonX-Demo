@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { sendVoiceAudioQuery, sendVoiceTextQuery, updateProfile, AuthError } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const LANGUAGE_OPTIONS = [
   { value: 'te-IN', label: 'Telugu' },
@@ -31,14 +32,14 @@ const SAFE_PROFILE_FIELDS = {
   upi: 'upi',
 };
 
-const ACTION_LABELS = {
-  NAVIGATE: 'Open page',
-  OPEN_MAP: 'Open map',
-  START_BOUNDARY_DRAWING: 'Draw boundary',
-  FOCUS_FIELD: 'Review fields',
-  SHOW_SCORE: 'Show score',
-  SHOW_EARNINGS: 'Show earnings',
-  SHOW_DOCUMENT_STATUS: 'Show documents',
+const ACTION_LABEL_KEYS = {
+  NAVIGATE: 'voxActNavigate',
+  OPEN_MAP: 'voxActOpenMap',
+  START_BOUNDARY_DRAWING: 'voxActDraw',
+  FOCUS_FIELD: 'voxActFocus',
+  SHOW_SCORE: 'voxActScore',
+  SHOW_EARNINGS: 'voxActEarnings',
+  SHOW_DOCUMENT_STATUS: 'voxActDocs',
 };
 
 function pathForAction(action) {
@@ -53,28 +54,29 @@ function pathForAction(action) {
 
 /** Renders the structured account details behind a voice answer. */
 function ToolDetails({ result }) {
+  const { t } = useLanguage();
   if (!result || typeof result !== 'object') return null;
   const plots = Array.isArray(result.plots) ? result.plots : [];
   const scores = result.scores || result.credits || null;
   const rows = [];
-  if (typeof result.count === 'number') rows.push(['Plots', String(result.count)]);
-  if (typeof result.plots_count === 'number') rows.push(['Plots', String(result.plots_count)]);
+  if (typeof result.count === 'number') rows.push([t('voxPlots'), String(result.count)]);
+  if (typeof result.plots_count === 'number') rows.push([t('voxPlots'), String(result.plots_count)]);
   if (scores) {
-    if (scores.carbon_tonnes != null) rows.push(['Carbon (t)', String(scores.carbon_tonnes)]);
-    if (scores.total_credits != null) rows.push(['Total credits', String(scores.total_credits)]);
-    if (scores.biodiversity_score != null) rows.push(['Biodiversity', String(scores.biodiversity_score)]);
+    if (scores.carbon_tonnes != null) rows.push([t('voxCarbon'), String(scores.carbon_tonnes)]);
+    if (scores.total_credits != null) rows.push([t('voxTotalCredits'), String(scores.total_credits)]);
+    if (scores.biodiversity_score != null) rows.push([t('voxBiodiversity'), String(scores.biodiversity_score)]);
   }
-  if (typeof result.active_listings === 'number') rows.push(['Active listings', String(result.active_listings)]);
+  if (typeof result.active_listings === 'number') rows.push([t('voxActiveListings'), String(result.active_listings)]);
   if (typeof result.estimated_earnings === 'number') {
-    rows.push(['Est. earnings', `₹${result.estimated_earnings}${result.currency ? ` ${result.currency}` : ''}`]);
+    rows.push([t('voxEstEarnings'), `₹${result.estimated_earnings}${result.currency ? ` ${result.currency}` : ''}`]);
   }
   if (result.status && typeof result.status === 'string' && !result.requires_confirmation) {
-    rows.push(['Status', result.status.length > 80 ? `${result.status.slice(0, 80)}…` : result.status]);
+    rows.push([t('voxStatus'), result.status.length > 80 ? `${result.status.slice(0, 80)}…` : result.status]);
   }
   if (plots.length === 0 && rows.length === 0) return null;
   return (
     <div className="rounded-xl bg-forest-50 border border-forest-100 px-3 py-2 space-y-1.5">
-      <p className="text-[10px] uppercase font-bold text-carbon-400">Details</p>
+      <p className="text-[10px] uppercase font-bold text-carbon-400">{t('voxDetails')}</p>
       {rows.length > 0 && (
         <div className="space-y-1">
           {rows.map(([k, v]) => (
@@ -87,14 +89,14 @@ function ToolDetails({ result }) {
       )}
       {plots.slice(0, 4).map((p, i) => (
         <div key={i} className="flex justify-between gap-3 text-[11px] border-t border-forest-100 pt-1.5">
-          <span className="font-bold text-carbon-800 truncate">{p.name || `Plot ${i + 1}`}</span>
+          <span className="font-bold text-carbon-800 truncate">{p.name || `${t('voxPlot')} ${i + 1}`}</span>
           <span className="text-carbon-500 text-right shrink-0">
             {[p.crop_type, p.area_hectares ? `${p.area_hectares} ha` : null, p.status].filter(Boolean).join(' · ')}
           </span>
         </div>
       ))}
       {plots.length > 4 && (
-        <p className="text-[10px] text-carbon-400 text-right">+{plots.length - 4} more on dashboard</p>
+        <p className="text-[10px] text-carbon-400 text-right">+{plots.length - 4} {t('voxMoreDash')}</p>
       )}
     </div>
   );
@@ -103,6 +105,7 @@ function ToolDetails({ result }) {
 export default function FarmerVoiceAssistant() {
   const navigate = useNavigate();
   const { role, refreshUser, logout } = useAuth();
+  const { t } = useLanguage();
   const [language, setLanguage] = useState('te-IN');
   const [sessionId, setSessionId] = useState(null);
   const [text, setText] = useState('');
@@ -200,7 +203,7 @@ export default function FarmerVoiceAssistant() {
 
   const applyResult = (data) => {
     if (!data?.success) {
-      setError(data?.detail || data?.message || 'Voice assistant is unavailable.');
+      setError(data?.detail || data?.message || t('voxErrUnavailable'));
       setHasUpdate(true);
       return;
     }
@@ -240,9 +243,9 @@ export default function FarmerVoiceAssistant() {
     } catch (err) {
       if (err instanceof AuthError) {
         logout();
-        setError('Your session has expired. Please log in again to use the voice assistant.');
+        setError(t('voxErrSessionVoice'));
       } else {
-        setError('Could not reach the voice assistant. Please try again.');
+        setError(t('voxErrReach'));
       }
     } finally {
       setLoading(false);
@@ -294,21 +297,21 @@ export default function FarmerVoiceAssistant() {
           }
         };
         recognition.onnomatch = () => {
-          setError('Heard something but could not understand. Please speak clearly or type instead.');
+          setError(t('voxErrHeard'));
         };
         recognition.onerror = (event) => {
           setRecording(false);
           const code = event?.error || '';
           if (code === 'not-allowed' || code === 'service-not-allowed') {
-            setError('Microphone blocked. Allow mic access in the browser, then tap the mic again.');
+            setError(t('voxErrMicBlocked'));
           } else if (code === 'no-speech') {
-            setError('No speech heard. Tap the mic and speak, or type instead.');
+            setError(t('voxErrNoSpeech'));
           } else if (code === 'audio-capture') {
-            setError('No microphone found on this device. Please type instead.');
+            setError(t('voxErrNoMic'));
           } else if (code === 'aborted') {
             setError('');
           } else {
-            setError('Speech recognition is unavailable here. Recording your voice instead — tap stop when done.');
+            setError(t('voxErrSpeechFallback'));
             speechRecognitionRef.current = null;
             startMediaRecorder();
             return;
@@ -322,7 +325,7 @@ export default function FarmerVoiceAssistant() {
         recognition.start();
         return;
       } catch {
-        setError('Could not start speech recognition. Recording your voice instead.');
+        setError(t('voxErrSpeechStart'));
       }
     }
 
@@ -331,7 +334,7 @@ export default function FarmerVoiceAssistant() {
 
   const startMediaRecorder = async () => {
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
-      setError('Recording is not supported in this browser. Please type instead.');
+      setError(t('voxErrNoSupport'));
       return;
     }
     try {
@@ -354,9 +357,9 @@ export default function FarmerVoiceAssistant() {
         } catch (err) {
           if (err instanceof AuthError) {
             logout();
-            setError('Your session has expired. Please log in again to use the voice assistant.');
+            setError(t('voxErrSessionVoice'));
           } else {
-            setError('Could not process the recording. Please try again.');
+            setError(t('voxErrProcess'));
           }
         } finally {
           setLoading(false);
@@ -365,7 +368,7 @@ export default function FarmerVoiceAssistant() {
       recorder.start();
       setRecording(true);
     } catch {
-      setError('Microphone permission was not granted.');
+      setError(t('voxErrMicPerm'));
     }
   };
 
@@ -416,9 +419,9 @@ export default function FarmerVoiceAssistant() {
     } catch (err) {
       if (err instanceof AuthError) {
         logout();
-        setError('Your session has expired. Please log in again.');
+        setError(t('voxErrSession'));
       } else {
-        setError('Could not save the confirmed values.');
+        setError(t('voxErrSave'));
       }
     } finally {
       setLoading(false);
@@ -431,8 +434,8 @@ export default function FarmerVoiceAssistant() {
       <button
         type="button"
         onClick={() => setOpenPersist(true)}
-        title="Open Farmer Voice Assistant"
-        aria-label="Open voice assistant"
+        title={t('voxOpenTitle')}
+        aria-label={t('voxOpenAria')}
         className="fixed right-4 bottom-24 md:bottom-6 z-40 h-14 w-14 rounded-full bg-forest-800 hover:bg-forest-700 text-white shadow-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
       >
         {recording ? <MicOff size={22} /> : <MessageCircle size={22} />}
@@ -455,8 +458,8 @@ export default function FarmerVoiceAssistant() {
             <Volume2 size={16} />
           </div>
           <div className="min-w-0">
-            <h2 className="text-xs font-black text-carbon-900 truncate">Farmer Voice Assistant</h2>
-            <p className="text-[10px] text-carbon-500 truncate">Telugu, Hindi, English, mixed speech</p>
+            <h2 className="text-xs font-black text-carbon-900 truncate">{t('voxTitle')}</h2>
+            <p className="text-[10px] text-carbon-500 truncate">{t('voxSubtitle')}</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -464,15 +467,15 @@ export default function FarmerVoiceAssistant() {
             value={language}
             onChange={(event) => changeLanguage(event.target.value)}
             className="text-[11px] font-bold bg-forest-50 border border-forest-100 rounded-lg px-2 py-1.5 text-carbon-800 outline-none"
-            title="Voice language — mic listens in this language"
+            title={t('voxLangTitle')}
           >
-            {LANGUAGE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            {LANGUAGE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{t(option.value === 'te-IN' ? 'voxLangTe' : option.value === 'hi-IN' ? 'voxLangHi' : 'voxLangEn')}</option>)}
           </select>
           <button
             type="button"
             onClick={toggleAutoPlay}
-            title={autoPlay ? 'Auto-play replies: on' : 'Auto-play replies: off'}
-            aria-label="Toggle auto-play of voice replies"
+            title={autoPlay ? t('voxAutoOn') : t('voxAutoOff')}
+            aria-label={t('voxAutoAria')}
             className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${autoPlay ? 'bg-forest-800 text-white' : 'hover:bg-forest-50 text-carbon-500 hover:text-carbon-800'}`}
           >
             {autoPlay ? <Volume2 size={16} /> : <VolumeX size={16} />}
@@ -480,8 +483,8 @@ export default function FarmerVoiceAssistant() {
           <button
             type="button"
             onClick={() => setOpenPersist(false)}
-            title="Minimize"
-            aria-label="Minimize voice assistant"
+            title={t('voxMinimize')}
+            aria-label={t('voxMinimizeAria')}
             className="w-8 h-8 rounded-lg hover:bg-forest-50 text-carbon-500 hover:text-carbon-800 flex items-center justify-center transition-colors"
           >
             <ChevronDown size={16} />
@@ -498,7 +501,7 @@ export default function FarmerVoiceAssistant() {
             onClick={recording ? stopRecording : startRecording}
             disabled={loading}
             className={`h-11 w-11 rounded-xl flex items-center justify-center text-white shrink-0 ${recording ? 'bg-rose-600' : 'bg-forest-800'} disabled:opacity-60`}
-            title={recording ? 'Stop recording' : 'Start recording'}
+            title={recording ? t('voxStopRec') : t('voxStartRec')}
           >
             {recording ? <MicOff size={18} /> : <Mic size={18} />}
           </button>
@@ -506,7 +509,7 @@ export default function FarmerVoiceAssistant() {
             value={text}
             onChange={(event) => setText(event.target.value)}
             onKeyDown={(event) => { if (event.key === 'Enter') askText(); }}
-            placeholder="Ask about your farm"
+            placeholder={t('voxAskPh')}
             className="flex-1 min-w-0 h-11 px-3 rounded-xl border border-forest-100 bg-forest-50 text-sm text-carbon-800 outline-none focus:border-forest-500"
           />
           <button
@@ -514,7 +517,7 @@ export default function FarmerVoiceAssistant() {
             onClick={() => askText()}
             disabled={loading || !text.trim()}
             className="h-11 w-11 rounded-xl bg-carbon-800 text-white flex items-center justify-center disabled:opacity-50"
-            title="Send"
+            title={t('voxSend')}
           >
             {loading ? <Loader2 size={17} className="animate-spin" /> : <Send size={17} />}
           </button>
@@ -523,8 +526,8 @@ export default function FarmerVoiceAssistant() {
         {(recording || loading) && (
           <div className="text-[11px] font-semibold text-carbon-500">
             {recording
-              ? `Listening in ${LANGUAGE_OPTIONS.find((o) => o.value === language)?.label || language}… speak now`
-              : 'Processing securely...'}
+              ? `${t('voxListeningIn')} ${LANGUAGE_OPTIONS.find((o) => o.value === language) ? t(language === 'te-IN' ? 'voxLangTe' : language === 'hi-IN' ? 'voxLangHi' : 'voxLangEn') : language}… ${t('voxSpeakNow')}`
+              : t('voxProcessing')}
           </div>
         )}
 
@@ -532,7 +535,7 @@ export default function FarmerVoiceAssistant() {
           <div className="space-y-2">
             {transcript && (
               <div className="rounded-xl bg-forest-50 border border-forest-100 px-3 py-2">
-                <p className="text-[10px] uppercase font-bold text-carbon-400">Transcript</p>
+                <p className="text-[10px] uppercase font-bold text-carbon-400">{t('voxTranscript')}</p>
                 <p className="text-xs text-carbon-800 mt-1">{transcript}</p>
               </div>
             )}
@@ -546,7 +549,7 @@ export default function FarmerVoiceAssistant() {
                         type="button"
                         onClick={playing ? stopAudio : playAudio}
                         className="w-8 h-8 rounded-lg bg-forest-100 text-forest-800 flex items-center justify-center"
-                        title={playing ? 'Stop reply audio' : 'Play reply audio'}
+                        title={playing ? t('voxStopAudio') : t('voxPlayAudio')}
                       >
                         {playing ? <Square size={14} /> : <Play size={14} />}
                       </button>
@@ -554,7 +557,7 @@ export default function FarmerVoiceAssistant() {
                         type="button"
                         onClick={() => { stopAudio(); playAudio(); }}
                         className="w-8 h-8 rounded-lg bg-forest-50 text-carbon-500 hover:text-forest-800 flex items-center justify-center"
-                        title="Replay reply audio"
+                        title={t('voxReplayAudio')}
                       >
                         <RotateCcw size={14} />
                       </button>
@@ -578,7 +581,7 @@ export default function FarmerVoiceAssistant() {
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-forest-800 text-white text-[11px] font-bold"
               >
                 {action.type === 'OPEN_MAP' || action.type === 'START_BOUNDARY_DRAWING' ? <Map size={13} /> : <Navigation size={13} />}
-                {ACTION_LABELS[action.type] || 'Open'}
+                {t(ACTION_LABEL_KEYS[action.type] || 'voxActOpen')}
               </button>
             ))}
           </div>
@@ -586,7 +589,7 @@ export default function FarmerVoiceAssistant() {
 
         {Object.keys(safeProposals).length > 0 && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-            <p className="text-[11px] font-black text-amber-900 mb-2">Confirm suggested values</p>
+            <p className="text-[11px] font-black text-amber-900 mb-2">{t('voxConfirmTitle')}</p>
             <div className="space-y-1.5">
               {Object.entries(safeProposals).map(([key, value]) => (
                 <div key={key} className="flex justify-between gap-3 text-[11px]">
@@ -602,13 +605,13 @@ export default function FarmerVoiceAssistant() {
                 disabled={loading}
                 className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl bg-forest-800 text-white text-[11px] font-bold disabled:opacity-60"
               >
-                <Check size={13} /> Apply safe fields
+                <Check size={13} /> {t('voxApplySafe')}
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmation(null)}
                 className="w-10 h-9 rounded-xl bg-white border border-amber-200 text-amber-800 flex items-center justify-center"
-                title="Dismiss"
+                title={t('voxDismiss')}
               >
                 <X size={14} />
               </button>
@@ -619,7 +622,7 @@ export default function FarmerVoiceAssistant() {
       {/* Resize handle (bottom-left corner, drag to resize) */}
       <div
         ref={resizeRef}
-        title="Drag to resize"
+        title={t('voxResize')}
         className="absolute bottom-1 left-1 z-10 w-6 h-6 cursor-nesw-resize rounded-tl-lg opacity-40 hover:opacity-100 transition-opacity"
         style={{ touchAction: 'none' }}
       >

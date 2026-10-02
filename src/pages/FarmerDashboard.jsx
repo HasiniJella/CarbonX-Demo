@@ -4,6 +4,7 @@ import { MapPin, ShieldCheck, Wallet, ArrowRight, Compass, AlertTriangle, Upload
 import VerificationBadge from '../components/VerificationBadge';
 const LeafletMap = lazy(() => import('../components/LeafletMap'));
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { getMe, verifyLandDocument, analyzeFarm, saveFarm } from '../services/api';
 
 const CREDIT_RATE = 340;
@@ -12,6 +13,7 @@ export default function FarmerDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navState = location.state || {};
 
   const [loading, setLoading] = useState(true);
@@ -41,10 +43,10 @@ export default function FarmerDashboard() {
         setFarms(res.farms || []);
         setKyc(res.kyc || null);
       } else {
-        setLoadError(res.message || 'Could not load farm data.');
+        setLoadError(res.message || t('dashLoadFailed'));
       }
     } catch {
-      setLoadError('Could not reach the backend. Please try again.');
+      setLoadError(t('dashBackendUnreachable'));
     } finally {
       setLoading(false);
     }
@@ -66,15 +68,15 @@ export default function FarmerDashboard() {
     setVerifyResult(null);
     setScores(null);
     if (!surveyNumber.trim()) {
-      setVerifyError('Enter your survey number first.');
+      setVerifyError(t('dashErrSurveyFirst'));
       return;
     }
     if (!pahaniBase64) {
-      setVerifyError('Upload your Pahani document first.');
+      setVerifyError(t('dashErrPahaniFirst'));
       return;
     }
     if (!drawnGeojson) {
-      setVerifyError('Draw your farm boundary on the map first.');
+      setVerifyError(t('dashErrDrawFirst'));
       return;
     }
     setIsVerifying(true);
@@ -91,7 +93,7 @@ export default function FarmerDashboard() {
         document_content_type: pahaniFile?.type || 'image/jpeg',
       });
       if (!res.success) {
-        setVerifyError(res.message || 'Verification failed.');
+        setVerifyError(res.message || t('dashVerifyFailed'));
         return;
       }
       setVerifyResult(res);
@@ -110,7 +112,7 @@ export default function FarmerDashboard() {
         }
       }
     } catch {
-      setVerifyError('Could not reach the verification service.');
+      setVerifyError(t('dashVerifyUnreachable'));
     } finally {
       setIsVerifying(false);
     }
@@ -140,16 +142,16 @@ export default function FarmerDashboard() {
       if (res.success) {
         await refresh();
       } else {
-        setVerifyError(res.message || 'Could not save farm.');
+        setVerifyError(res.message || t('dashSaveFailed'));
       }
     } catch {
-      setVerifyError('Could not save farm.');
+      setVerifyError(t('dashSaveFailed'));
     } finally {
       setIsSaving(false);
     }
   };
 
-  const farmerName = user?.name || 'Farmer';
+  const farmerName = user?.name || t('dashDefaultFarmer');
   const village = user?.village || '';
   const district = user?.district || '';
 
@@ -179,7 +181,7 @@ export default function FarmerDashboard() {
               {badge && <VerificationBadge badge={badge} showTier size="sm" />}
               {kyc && (
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
-                  KYC: {kyc.status}
+                  {t('dashKycLabel')} {kyc.status}
                 </span>
               )}
             </div>
@@ -188,14 +190,14 @@ export default function FarmerDashboard() {
               <MapPin className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
               <span>
                 {village}{village && district ? ', ' : ''}{district}
-                {currentFarm ? ` | ${currentFarm.name}` : ' | No verified farm yet'}
+                {currentFarm ? ` | ${currentFarm.name}` : ` | ${t('dashNoVerifiedFarm')}`}
               </span>
             </p>
           </div>
 
           {farms.length > 1 && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold text-slate-500 mr-1">Switch Farm:</span>
+              <span className="text-xs font-bold text-slate-500 mr-1">{t('dashSwitchFarm')}</span>
               {farms.map((f, idx) => (
                 <button
                   key={f.id}
@@ -224,39 +226,38 @@ export default function FarmerDashboard() {
           <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-5">
             <div>
               <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                Tier 2 — Document + Boundary Verification
+                {t('dashTier2Badge')}
               </span>
-              <h2 className="text-xl font-extrabold font-manrope mt-2">Verify your land to unlock credits</h2>
+              <h2 className="text-xl font-extrabold font-manrope mt-2">{t('dashVerifyToUnlock')}</h2>
               <p className="text-xs text-slate-500 mt-1">
-                Your survey number was not found in the registry. Upload your Pahani, draw your boundary on the map,
-                and the Trust Engine cross-checks the drawn area (±20% tolerance).
+                {t('dashTier2Desc')}
               </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Survey Number</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{t('regSurvey')}</label>
                   <input
                     type="text"
                     value={surveyNumber}
                     onChange={(e) => setSurveyNumber(e.target.value)}
-                    placeholder="e.g. 999/Z"
+                    placeholder={t('dashSurveyExample')}
                     className="w-full px-3 py-2.5 bg-[#F8FAF8] border border-slate-200 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-emerald-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Pahani Document (JPG/PNG/PDF)</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{t('dashPahaniLabel')}</label>
                   <div className="border-2 border-dashed border-slate-300 rounded-xl p-5 text-center hover:border-emerald-600 bg-[#F8FAF8] transition-colors">
                     <input type="file" accept="image/*,.pdf" onChange={handlePahaniFile} id="dash-pahani" className="hidden" />
                     <label htmlFor="dash-pahani" className="cursor-pointer space-y-1 block">
                       <Upload className="w-7 h-7 text-emerald-700 mx-auto" />
-                      <p className="text-xs font-bold text-slate-900">{pahaniFile ? pahaniFile.name : 'Upload Pahani / RoR 1B'}</p>
+                      <p className="text-xs font-bold text-slate-900">{pahaniFile ? pahaniFile.name : t('dashUploadPahani')}</p>
                     </label>
                   </div>
                 </div>
                 <div className="bg-[#F8FAF8] border border-slate-200 rounded-xl p-3 text-xs flex justify-between">
-                  <span className="font-semibold text-slate-500">Drawn area</span>
+                  <span className="font-semibold text-slate-500">{t('dashDrawnArea')}</span>
                   <span className="font-mono font-bold text-emerald-800">{drawnAreaHa} ha</span>
                 </div>
                 {verifyError && (
@@ -268,12 +269,12 @@ export default function FarmerDashboard() {
                   className="w-full py-3 bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                  <span>{isVerifying ? 'Verifying...' : 'Verify Boundary & Document'}</span>
+                  <span>{isVerifying ? t('regVerifying') : t('dashVerifyBtn')}</span>
                 </button>
               </div>
 
               <div className="h-[320px] md:h-[420px] rounded-2xl overflow-hidden border border-slate-200">
-                <Suspense fallback={<div className="h-full flex items-center justify-center text-xs text-slate-500">Loading map…</div>}>
+                <Suspense fallback={<div className="h-full flex items-center justify-center text-xs text-slate-500">{t('dashLoadingMap')}</div>}>
                 <LeafletMap
                   onGeojsonDrawn={setDrawnGeojson}
                   onAreaCalculated={(r) => r && setDrawnGeojson && setDrawnAreaHa(r.area)}
@@ -293,30 +294,30 @@ export default function FarmerDashboard() {
                     : <AlertTriangle className="w-5 h-5 text-amber-700" />}
                   <span className="text-sm font-extrabold">
                     {verifyResult.status === 'VERIFIED'
-                      ? `Verified — ${verifyResult.badge} badge (Tier ${verifyResult.tier})`
-                      : `${verifyResult.status} — routed to FPO for manual review (Tier 3)`}
+                      ? <>{t('dashVerifiedWord')} — {verifyResult.badge} {t('dashBadgeWord')} ({t('dashTierWord')} {verifyResult.tier})</>
+                      : <>{verifyResult.status} {t('dashRoutedFpo')}</>}
                   </span>
                   {verifyResult.badge && <VerificationBadge badge={verifyResult.badge} showTier size="sm" />}
                 </div>
                 {(verifyResult.reasons || []).length > 0 && (
-                  <p className="text-xs text-slate-600">Checks: {(verifyResult.reasons || []).join(', ')}</p>
+                  <p className="text-xs text-slate-600">{t('dashChecksLabel')} {(verifyResult.reasons || []).join(', ')}</p>
                 )}
                 {verifyResult.status === 'VERIFIED' && scores?.success && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                     <div className="bg-white rounded-xl border border-emerald-200 p-3">
-                      <p className="font-bold text-slate-500 uppercase text-[10px]">NDVI</p>
+                      <p className="font-bold text-slate-500 uppercase text-[10px]">{t('dashNdviWord')}</p>
                       <p className="text-lg font-extrabold text-emerald-900">{scores.ndvi}</p>
                     </div>
                     <div className="bg-white rounded-xl border border-emerald-200 p-3">
-                      <p className="font-bold text-slate-500 uppercase text-[10px]">Carbon</p>
+                      <p className="font-bold text-slate-500 uppercase text-[10px]">{t('carbonLabel')}</p>
                       <p className="text-lg font-extrabold text-emerald-900">{scores.carbon_tonnes} t</p>
                     </div>
                     <div className="bg-white rounded-xl border border-emerald-200 p-3">
-                      <p className="font-bold text-slate-500 uppercase text-[10px]">Biodiversity</p>
+                      <p className="font-bold text-slate-500 uppercase text-[10px]">{t('bioLabel')}</p>
                       <p className="text-lg font-extrabold text-emerald-900">{scores.biodiversity_score}</p>
                     </div>
                     <div className="bg-white rounded-xl border border-emerald-200 p-3">
-                      <p className="font-bold text-slate-500 uppercase text-[10px]">Total credits</p>
+                      <p className="font-bold text-slate-500 uppercase text-[10px]">{t('totalCredits')}</p>
                       <p className="text-lg font-extrabold text-emerald-900">{scores.total_credits}</p>
                     </div>
                   </div>
@@ -327,7 +328,7 @@ export default function FarmerDashboard() {
                     disabled={isSaving}
                     className="px-5 py-2.5 bg-[#1B4332] hover:bg-[#2D6A4F] text-white text-xs font-bold rounded-xl flex items-center gap-2 disabled:opacity-50"
                   >
-                    <span>{isSaving ? 'Saving...' : 'Save Farm to Dashboard'}</span>
+                    <span>{isSaving ? t('dashSavingBtn') : t('dashSaveFarmBtn')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 )}
@@ -343,15 +344,14 @@ export default function FarmerDashboard() {
               <AlertTriangle className="w-6 h-6 text-amber-700 shrink-0 mt-1" />
               <div className="space-y-1">
                 <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider bg-amber-200 px-2.5 py-0.5 rounded-full">
-                  {status} — FPO Review (Tier 3)
+                  {status} {t('dashFpoReviewSuffix')}
                 </span>
-                <h2 className="text-xl font-extrabold font-manrope">Complete verification to earn carbon credits</h2>
+                <h2 className="text-xl font-extrabold font-manrope">{t('dashCompleteVerification')}</h2>
                 <p className="text-xs text-amber-800 max-w-2xl leading-relaxed">
-                  Parcel <code className="font-mono font-bold">{currentFarm.name}</code> is awaiting FPO attestation.
-                  Credit minting and earnings stay locked until your FPO officer confirms it.
+                  {t('dashParcelWord')} <code className="font-mono font-bold">{currentFarm.name}</code> {t('dashAwaitingAttest')}
                 </p>
                 {(kyc?.reasons || []).length > 0 && isPending && (
-                  <p className="text-xs text-amber-800">Flagged checks: {(kyc.reasons || []).join(', ')}</p>
+                  <p className="text-xs text-amber-800">{t('dashFlaggedChecks')} {(kyc.reasons || []).join(', ')}</p>
                 )}
               </div>
             </div>
@@ -361,7 +361,7 @@ export default function FarmerDashboard() {
                 className="px-5 py-2.5 bg-[#1B4332] hover:bg-[#2D6A4F] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center gap-2"
               >
                 <ShieldCheck className="w-4 h-4" />
-                <span>Re-run Verification Flow</span>
+                <span>{t('dashRerunVerification')}</span>
               </button>
             </div>
           </div>
@@ -373,13 +373,13 @@ export default function FarmerDashboard() {
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <div>
                 <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider bg-white border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                  ESTIMATED ANNUAL CARBON REVENUE
+                  {t('dashEstRevenue')}
                 </span>
                 <h2 className="text-3xl md:text-4xl font-extrabold font-manrope text-[#1B4332] mt-2">
-                  ₹{earnings.toLocaleString('en-IN')} <span className="text-sm font-normal text-slate-600">/ year</span>
+                  ₹{earnings.toLocaleString('en-IN')} <span className="text-sm font-normal text-slate-600">{t('dashPerYear')}</span>
                 </h2>
                 <p className="text-xs text-slate-600 mt-1 max-w-xl font-medium">
-                  {currentFarm.area_hectares} ha {currentFarm.crop_type} = {credits} credits/year, benchmarked under verified {badge} badge status.
+                  {currentFarm.area_hectares} ha {currentFarm.crop_type} = {credits} {t('dashRevenueDesc')} {badge} {t('dashBadgeStatusSuffix')}
                 </p>
               </div>
               <button
@@ -387,7 +387,7 @@ export default function FarmerDashboard() {
                 className="px-6 py-3 bg-[#1B4332] hover:bg-[#2D6A4F] text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-2 shrink-0"
               >
                 <Wallet className="w-4 h-4 text-emerald-300" />
-                <span>Open Wallet & UPI Ledger</span>
+                <span>{t('dashOpenWallet')}</span>
               </button>
             </div>
           </div>
@@ -397,19 +397,19 @@ export default function FarmerDashboard() {
         {currentFarm && !isPending && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white border border-slate-200 border-l-4 border-l-emerald-600 shadow-sm rounded-2xl p-6 space-y-1">
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">NDVI Vegetation Index</p>
-              <p className="text-3xl font-extrabold text-[#1B4332] font-manrope">{currentFarm.ndvi ?? '—'} Index</p>
-              <p className="text-xs text-slate-500 font-medium pt-1">Sentinel-2 Multi-Spectral Active Vegetation Canopy</p>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('dashNdviTitle')}</p>
+              <p className="text-3xl font-extrabold text-[#1B4332] font-manrope">{currentFarm.ndvi ?? '—'} {t('dashIndexWord')}</p>
+              <p className="text-xs text-slate-500 font-medium pt-1">{t('dashCanopyDesc')}</p>
             </div>
             <div className="bg-white border border-slate-200 border-l-4 border-l-emerald-600 shadow-sm rounded-2xl p-6 space-y-1">
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Active Carbon Credits</p>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('dashActiveCredits')}</p>
               <p className="text-3xl font-extrabold text-slate-900 font-manrope">{credits} tCO2e</p>
-              <p className="text-xs text-emerald-800 font-semibold mt-1">Minted & Verified ({badge})</p>
+              <p className="text-xs text-emerald-800 font-semibold mt-1">{t('dashMintedVerified')} ({badge})</p>
             </div>
             <div className="bg-white border border-slate-200 border-l-4 border-l-emerald-600 shadow-sm rounded-2xl p-6 space-y-1">
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Soil Biodiversity Index</p>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('dashSoilBioIndex')}</p>
               <p className="text-3xl font-extrabold text-amber-700 font-manrope">{currentFarm.biodiversity_score ?? '—'} / 100</p>
-              <p className="text-xs text-slate-500 font-medium pt-1">Ecosystem Richness Score</p>
+              <p className="text-xs text-slate-500 font-medium pt-1">{t('dashEcoScore')}</p>
             </div>
           </div>
         )}
@@ -420,7 +420,7 @@ export default function FarmerDashboard() {
             className="text-xs font-bold text-emerald-800 hover:underline flex items-center gap-1.5"
           >
             <Compass className="w-4 h-4" />
-            <span>Verify another parcel</span>
+            <span>{t('dashVerifyAnother')}</span>
           </button>
         )}
 

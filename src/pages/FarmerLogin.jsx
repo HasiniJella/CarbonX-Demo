@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Phone, ArrowRight, ShieldCheck, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { sendLoginOtp, loginUser } from '../services/api';
 import DemoNumberBanner, { DEMO_FARMER_PHONE } from '../components/DemoNumberBanner';
 
 export default function FarmerLogin() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t } = useLanguage();
 
   const [phone, setPhone] = useState('9876543210');
   const [showOtp, setShowOtp] = useState(false);
@@ -36,7 +38,7 @@ export default function FarmerLogin() {
   const handleSendOtpSubmit = async (e) => {
     e.preventDefault();
     if (phone.length < 10) {
-      setError('Please enter a valid 10-digit mobile number');
+      setError(t('errValidPhone'));
       return;
     }
 
@@ -62,7 +64,7 @@ export default function FarmerLogin() {
       setCountdown(60);
       setCanResend(false);
     } catch (err) {
-      setError('Could not reach the OTP service. Please try again.');
+      setError(t('errOtpService'));
     } finally {
       setIsSendingOtp(false);
     }
@@ -111,7 +113,7 @@ export default function FarmerLogin() {
       setCountdown(60);
       setCanResend(false);
     } catch (err) {
-      setError('Could not resend OTP. Please try again.');
+      setError(t('errResendOtp'));
     } finally {
       setIsSendingOtp(false);
     }
@@ -121,7 +123,7 @@ export default function FarmerLogin() {
     e.preventDefault();
     const fullOtp = otpDigits.join('');
     if (fullOtp.length !== 6) {
-      setError('Please enter complete 6-digit OTP');
+      setError(t('errOtpIncomplete'));
       return;
     }
 
@@ -138,7 +140,7 @@ export default function FarmerLogin() {
       login(res.token, res.user);
       navigate('/farmer/dashboard');
     } catch (err) {
-      setError('Could not verify OTP. Please try again.');
+      setError(t('errVerifyOtp'));
     } finally {
       setIsVerifying(false);
     }
@@ -159,8 +161,8 @@ export default function FarmerLogin() {
                 Phone OTP Verification
               </span>
             </div>
-            <h1 className="text-2xl font-extrabold text-carbon-900 font-manrope">Sign In to CarbonX</h1>
-            <p className="text-xs text-agriText-muted">Enter your mobile number to receive a 6-digit OTP.</p>
+            <h1 className="text-2xl font-extrabold text-carbon-900 font-manrope">{t('loginTitle')}</h1>
+            <p className="text-xs text-agriText-muted">{t('loginPhoneDesc')}</p>
           </div>
 
           {/* Demo number for judges / SIH evaluators (Twilio trial can't SMS unverified numbers) */}
@@ -175,7 +177,7 @@ export default function FarmerLogin() {
           {!showOtp ? (
             <form onSubmit={handleSendOtpSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-carbon-800 mb-1">Mobile Number (+91)</label>
+                <label className="block text-xs font-bold text-carbon-800 mb-1">{t('mobileLabel')}</label>
                 <div className="flex bg-surface-sage/40 border border-forest-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-primary/30">
                   <span className="bg-surface-sage text-carbon-800 px-3 py-2.5 text-xs font-bold border-r border-forest-200 flex items-center">
                     +91
@@ -197,7 +199,7 @@ export default function FarmerLogin() {
                 disabled={isSendingOtp}
                 className="w-full py-3 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <span>{isSendingOtp ? 'Sending OTP...' : 'Send 6-Digit OTP'}</span>
+                <span>{isSendingOtp ? t('sendingOtpBtn') : t('sendOtpBtn')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -205,12 +207,12 @@ export default function FarmerLogin() {
             <form onSubmit={handleVerifyOtpSubmit} className="space-y-4">
               {devOtp && (
                 <div className="bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 text-xs text-amber-800 font-mono font-bold text-center">
-                  🔧 Dev mode — SMS not sent. OTP: <span className="text-lg tracking-widest">{devOtp}</span>
+                  🔧 {t('devModeLabel')} <span className="text-lg tracking-widest">{devOtp}</span>
                 </div>
               )}
               <div>
                 <label className="block text-xs font-bold text-carbon-800 mb-1.5 text-center">
-                  Enter 6-Digit Verification Code
+                  {t('otpCodeTitle')}
                 </label>
                 <div className="flex justify-between gap-1.5 max-w-xs mx-auto">
                   {otpDigits.map((digit, idx) => (
@@ -232,10 +234,10 @@ export default function FarmerLogin() {
               <div className="flex justify-between items-center bg-surface-sage/50 border border-forest-200 rounded-xl p-2.5 text-xs text-agriText-muted">
                 <span>
                   {canResend ? (
-                    <span className="text-carbon-800 font-semibold">Didn't receive code?</span>
+                    <span className="text-carbon-800 font-semibold">{t('noCode')}</span>
                   ) : (
                     <span>
-                      Resend code in <strong className="font-mono text-primary font-bold">{countdown}s</strong>
+                      {t('resendInX')} <strong className="font-mono text-primary font-bold">{countdown}s</strong>
                     </span>
                   )}
                 </span>
@@ -250,7 +252,7 @@ export default function FarmerLogin() {
                   }`}
                 >
                   <RefreshCw className="w-3 h-3" />
-                  <span>Resend OTP</span>
+                  <span>{t('resendOtpBtn')}</span>
                 </button>
               </div>
 
@@ -259,7 +261,7 @@ export default function FarmerLogin() {
                 disabled={isVerifying}
                 className="w-full py-3 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <span>{isVerifying ? 'Verifying...' : 'Verify & Continue'}</span>
+                <span>{isVerifying ? t('verifyingBtn') : t('verifyContinueBtn')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -267,13 +269,13 @@ export default function FarmerLogin() {
 
           <div className="text-center pt-2 border-t border-forest-100">
             <p className="text-xs text-agriText-muted">
-              Don't have a farm registered?{' '}
+              {t('noFarmYet')}{' '}
               <button
                 type="button"
                 onClick={() => navigate('/farmer/land-verification')}
                 className="text-primary font-bold hover:underline"
               >
-                Start Verification
+                {t('startVerificationLink')}
               </button>
             </p>
           </div>

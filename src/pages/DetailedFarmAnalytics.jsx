@@ -4,62 +4,64 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { AlertTriangle, Sparkles, TrendingUp, Compass, ArrowLeft, Leaf, Sliders, CheckCircle2 } from 'lucide-react';
 import VerificationBadge from '../components/VerificationBadge';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function DetailedFarmAnalytics() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   // Multi-season Kharif vs Rabi historical NDVI dataset
   const trendData = [
-    { month: 'Jun (Kharif)', ndvi: 0.42, rabi_baseline: 0.40 },
-    { month: 'Aug (Kharif)', ndvi: 0.76, rabi_baseline: 0.60 },
-    { month: 'Oct (Kharif)', ndvi: 0.82, rabi_baseline: 0.70 },
-    { month: 'Dec (Rabi)', ndvi: 0.58, rabi_baseline: 0.55 },
-    { month: 'Feb (Rabi)', ndvi: 0.74, rabi_baseline: 0.72 },
-    { month: 'Apr (Fallow)', ndvi: 0.38, rabi_baseline: 0.35 }
+    { month: t('dfaMonth1'), ndvi: 0.42, rabi_baseline: 0.40 },
+    { month: t('dfaMonth2'), ndvi: 0.76, rabi_baseline: 0.60 },
+    { month: t('dfaMonth3'), ndvi: 0.82, rabi_baseline: 0.70 },
+    { month: t('dfaMonth4'), ndvi: 0.58, rabi_baseline: 0.55 },
+    { month: t('dfaMonth5'), ndvi: 0.74, rabi_baseline: 0.72 },
+    { month: t('dfaMonth6'), ndvi: 0.38, rabi_baseline: 0.35 }
   ];
 
   // P3 Score Simulator Practice Options
   const practiceOptions = [
     {
       id: 'none',
-      name: 'Current Baseline (Conventional Tillage)',
+      name: t('dfaPracticeNone'),
       scoreDelta: 0,
       creditDelta: 0,
       earningsDelta: 0,
-      desc: 'Standard chemical fertilizer application and seasonal tillage.'
+      desc: t('dfaPracticeNoneDesc')
     },
     {
       id: 'no_till',
-      name: 'Switch to Zero-Tillage Farming',
+      name: t('dfaPracticeNoTill'),
       scoreDelta: 8,
       creditDelta: 2.2,
       earningsDelta: 748,
-      desc: 'Eliminating tillage preserves soil organic carbon and reduces soil moisture evaporation.'
+      desc: t('dfaPracticeNoTillDesc')
     },
     {
       id: 'cover_crop',
-      name: 'Incorporate Legume Cover Crops',
+      name: t('dfaPracticeCover'),
       scoreDelta: 6,
       creditDelta: 1.8,
       earningsDelta: 612,
-      desc: 'Planting clover/sunn hemp during fallow windows fixes atmospheric nitrogen.'
+      desc: t('dfaPracticeCoverDesc')
     },
     {
       id: 'awd_rice',
-      name: 'Alternate Wetting & Drying (AWD Rice)',
+      name: t('dfaPracticeAwd'),
       scoreDelta: 10,
       creditDelta: 3.1,
       earningsDelta: 1054,
-      desc: 'Periodic drying of rice paddies reduces methane emissions by up to 48%.'
+      desc: t('dfaPracticeAwdDesc')
     },
     {
       id: 'biochar',
-      name: 'Apply Biochar & Organic Compost Layer',
+      name: t('dfaPracticeBiochar'),
       scoreDelta: 12,
       creditDelta: 3.8,
       earningsDelta: 1292,
-      desc: 'Adding biochar locks stable carbon in the soil matrix for decades.'
+      desc: t('dfaPracticeBiocharDesc')
     }
   ];
 
@@ -84,12 +86,12 @@ export default function DetailedFarmAnalytics() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[10px] font-bold text-primary uppercase tracking-wider bg-surface-sage border border-forest-200 px-2.5 py-0.5 rounded-full">
-                Sentinel-2 MRV & Carbon Passport
+                {t('dfaBadge')}
               </span>
               <VerificationBadge badge="REGISTRY" showTier size="sm" />
             </div>
-            <h1 className="text-2xl font-extrabold text-carbon-900 font-manrope">Multi-Season Analytics & Passport</h1>
-            <p className="text-xs text-agriText-muted mt-0.5">Historical vegetative canopy index & predictive agronomic scoring.</p>
+            <h1 className="text-2xl font-extrabold text-carbon-900 font-manrope">{t('dfaTitle')}</h1>
+            <p className="text-xs text-agriText-muted mt-0.5">{t('dfaDesc')}</p>
           </div>
 
           <button
@@ -97,7 +99,7 @@ export default function DetailedFarmAnalytics() {
             className="px-4 py-2.5 bg-surface-sage hover:bg-forest-100 border border-forest-200 text-carbon-800 rounded-xl text-xs font-bold transition-all flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to Dashboard</span>
+            <span>{t('cwelBackDashboard')}</span>
           </button>
         </div>
 
@@ -107,13 +109,13 @@ export default function DetailedFarmAnalytics() {
             <div>
               <div className="flex items-center gap-2">
                 <Sliders className="w-5 h-5 text-primary" />
-                <h2 className="text-base font-bold text-carbon-900">Score Improvement Simulator</h2>
+                <h2 className="text-base font-bold text-carbon-900">{t('dfaSimTitle')}</h2>
               </div>
-              <p className="text-xs text-agriText-muted">Simulate agronomic practices to project score boosts & earning deltas.</p>
+              <p className="text-xs text-agriText-muted">{t('dfaSimDesc')}</p>
             </div>
 
             <span className="text-[10px] font-bold text-agriText-subtle bg-warm-cream px-2 py-1 rounded">
-              Interactive ML Simulation
+              {t('dfaSimBadge')}
             </span>
           </div>
 
@@ -121,7 +123,7 @@ export default function DetailedFarmAnalytics() {
             {/* Practice Selection Form */}
             <div className="space-y-3">
               <label className="block text-xs font-bold text-carbon-800">
-                Select Sustainable Farming Practice
+                {t('dfaSelectLabel')}
               </label>
               <select
                 value={selectedPracticeId}
@@ -130,7 +132,7 @@ export default function DetailedFarmAnalytics() {
               >
                 {practiceOptions.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} {p.scoreDelta > 0 ? `(+${p.scoreDelta} pts)` : ''}
+                    {p.name} {p.scoreDelta > 0 ? `(+${p.scoreDelta} ${t('dfaPts')})` : ''}
                   </option>
                 ))}
               </select>
@@ -142,20 +144,20 @@ export default function DetailedFarmAnalytics() {
             {/* Projected Impact Displays */}
             <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-surface-sage/40 border border-forest-200 rounded-xl p-4 space-y-1">
-                <span className="text-[10px] text-agriText-subtle font-semibold uppercase tracking-wider block">Projected MRV Score</span>
+                <span className="text-[10px] text-agriText-subtle font-semibold uppercase tracking-wider block">{t('dfaProjScore')}</span>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-extrabold text-carbon-900 font-manrope">{currentScore}</span>
                   <span className="text-xs text-agriText-subtle">/ 100</span>
                 </div>
                 {activePractice.scoreDelta > 0 && (
                   <span className="text-[11px] font-bold text-primary flex items-center gap-0.5">
-                    <Sparkles className="w-3.5 h-3.5" /> +{activePractice.scoreDelta} pts boost
+                    <Sparkles className="w-3.5 h-3.5" /> +{activePractice.scoreDelta} {t('dfaBoost')}
                   </span>
                 )}
               </div>
 
               <div className="bg-surface-sage/40 border border-forest-200 rounded-xl p-4 space-y-1">
-                <span className="text-[10px] text-agriText-subtle font-semibold uppercase tracking-wider block">Projected Credits</span>
+                <span className="text-[10px] text-agriText-subtle font-semibold uppercase tracking-wider block">{t('dfaProjCredits')}</span>
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-extrabold text-carbon-900 font-manrope">{currentCredits}</span>
                   <span className="text-xs text-agriText-subtle">tCO2e</span>
@@ -168,14 +170,14 @@ export default function DetailedFarmAnalytics() {
               </div>
 
               <div className="bg-surface-sage border border-forest-200 rounded-xl p-4 space-y-1">
-                <span className="text-[10px] text-agriText-subtle font-semibold uppercase tracking-wider block">Projected Revenue Delta</span>
+                <span className="text-[10px] text-agriText-subtle font-semibold uppercase tracking-wider block">{t('dfaProjRevenue')}</span>
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-extrabold text-primary font-manrope">₹{currentEarnings.toLocaleString('en-IN')}</span>
-                  <span className="text-xs text-agriText-muted">/ yr</span>
+                  <span className="text-xs text-agriText-muted">{t('dfaPerYr')}</span>
                 </div>
                 {activePractice.earningsDelta > 0 && (
                   <span className="text-[11px] font-bold text-primary flex items-center gap-0.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> +₹{activePractice.earningsDelta}/yr delta
+                    <CheckCircle2 className="w-3.5 h-3.5" /> +₹{activePractice.earningsDelta}{t('dfaDeltaSuffix')}
                   </span>
                 )}
               </div>
@@ -187,15 +189,15 @@ export default function DetailedFarmAnalytics() {
         <div className="bg-white border border-forest-100 shadow-card rounded-2xl p-6 space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-base font-bold text-carbon-900">Multi-Season NDVI Progression Curve</h2>
-              <p className="text-xs text-agriText-muted">Comparing Kharif main crop vs Rabi inter-crop vegetative canopy retention.</p>
+              <h2 className="text-base font-bold text-carbon-900">{t('dfaChartTitle')}</h2>
+              <p className="text-xs text-agriText-muted">{t('dfaChartDesc')}</p>
             </div>
             <div className="flex items-center gap-4 text-xs font-medium">
               <span className="flex items-center gap-1.5 text-primary font-bold">
-                <span className="w-3 h-3 bg-primary rounded-full inline-block" /> Kharif 2024
+                <span className="w-3 h-3 bg-primary rounded-full inline-block" /> {t('dfaLegendKharif')}
               </span>
               <span className="flex items-center gap-1.5 text-agriText-subtle">
-                <span className="w-3 h-3 bg-agriText-subtle rounded-full inline-block" /> Rabi Baseline
+                <span className="w-3 h-3 bg-agriText-subtle rounded-full inline-block" /> {t('dfaLegendRabi')}
               </span>
             </div>
           </div>

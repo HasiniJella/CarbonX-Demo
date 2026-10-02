@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, ArrowRight, ShieldCheck, RefreshCw, KeyRound, Lock, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { PY } from '../services/api';
 
 export default function CorporateLogin() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t } = useLanguage();
 
   const [name, setName] = useState('Telangana Sustainable Agro Pvt Ltd');
   const [password, setPassword] = useState('Corporate@2026');
@@ -62,7 +64,7 @@ export default function CorporateLogin() {
   const handleCorporateLogin = async (e) => {
     if (e) e.preventDefault();
     if (!name || !password) {
-      setError('Please provide corporate name and password');
+      setError(t('clogErrMissing'));
       return;
     }
     setError('');
@@ -98,7 +100,7 @@ export default function CorporateLogin() {
       console.warn('Backend corporate login API offline, using fallback auth', err);
     }
 
-    setError('Could not reach the corporate authentication service.');
+    setError(t('clogErrService'));
     setIsVerifying(false);
   };
 
@@ -114,14 +116,14 @@ export default function CorporateLogin() {
             </div>
             <div className="flex items-center justify-center gap-1.5">
               <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                Institutional Buyer Desk
+                {t('clogBadge')}
               </span>
               <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                ESG / BRSR
+                {t('clogEsg')}
               </span>
             </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 font-manrope">Corporate Buyer Sign In</h1>
-            <p className="text-xs text-slate-500">Access enterprise credit allocation, BRSR reports & Scope 1-3 retirement.</p>
+            <h1 className="text-2xl font-extrabold text-slate-900 font-manrope">{t('clogTitle')}</h1>
+            <p className="text-xs text-slate-500">{t('clogDesc')}</p>
           </div>
 
           {error && (
@@ -133,7 +135,7 @@ export default function CorporateLogin() {
           {!showOtp ? (
             <form onSubmit={handleCorporateLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Corporate Name / Identifier (`name`)</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{t('clogNameLabel')}</label>
                 <input
                   type="text"
                   required
@@ -145,7 +147,7 @@ export default function CorporateLogin() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Corporate Password (`password`)</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{t('clogPassLabel')}</label>
                 <input
                   type="password"
                   required
@@ -160,7 +162,7 @@ export default function CorporateLogin() {
               <div className="flex items-center justify-between bg-[#F8FAF8] border border-slate-200 rounded-xl p-3 text-xs">
                 <div className="flex items-center gap-2">
                   <KeyRound className="w-4 h-4 text-emerald-700" />
-                  <span className="font-semibold text-slate-700">Require Secondary OTP Verification</span>
+                  <span className="font-semibold text-slate-700">{t('clog2fa')}</span>
                 </div>
                 <input
                   type="checkbox"
@@ -175,7 +177,7 @@ export default function CorporateLogin() {
                 disabled={isVerifying}
                 className="w-full py-3 bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2"
               >
-                <span>{useOtpToggle ? 'Proceed to 2FA Secondary OTP' : 'Sign In to Corporate ESG Desk'}</span>
+                <span>{useOtpToggle ? t('clogProceed2fa') : t('clogSignIn')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -183,7 +185,7 @@ export default function CorporateLogin() {
             <form onSubmit={handleCorporateLogin} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1.5 text-center">
-                  Enter 6-Digit Secondary Corporate OTP
+                  {t('clogOtpTitle')}
                 </label>
                 <div className="flex justify-between gap-1.5 max-w-xs mx-auto">
                   {otpDigits.map((digit, idx) => (
@@ -204,10 +206,10 @@ export default function CorporateLogin() {
               <div className="flex justify-between items-center bg-[#F8FAF8] border border-slate-200 rounded-xl p-2.5 text-xs text-slate-600">
                 <span>
                   {canResend ? (
-                    <span className="text-slate-800 font-semibold">Didn't receive code?</span>
+                    <span className="text-slate-800 font-semibold">{t('noCode')}</span>
                   ) : (
                     <span>
-                      Resend code in <strong className="font-mono text-emerald-800 font-bold">{countdown}s</strong>
+                      {t('resendInX')} <strong className="font-mono text-emerald-800 font-bold">{countdown}s</strong>
                     </span>
                   )}
                 </span>
@@ -222,7 +224,7 @@ export default function CorporateLogin() {
                   }`}
                 >
                   <RefreshCw className="w-3 h-3" />
-                  <span>Resend OTP</span>
+                  <span>{t('resendOtpBtn')}</span>
                 </button>
               </div>
 
@@ -231,7 +233,7 @@ export default function CorporateLogin() {
                 disabled={isVerifying}
                 className="w-full py-3 bg-[#1B4332] hover:bg-[#2D6A4F] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <span>{isVerifying ? 'Authenticating Corporate...' : 'Verify Corporate Credentials'}</span>
+                <span>{isVerifying ? t('clogVerifying') : t('clogVerifyBtn')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -239,13 +241,13 @@ export default function CorporateLogin() {
 
           <div className="text-center pt-2 border-t border-slate-100">
             <p className="text-xs text-slate-500">
-              Need corporate enterprise access?{' '}
+              {t('clogNeedAccess')}{' '}
               <button
                 type="button"
                 onClick={() => navigate('/corporate/welcome')}
                 className="text-emerald-800 font-bold hover:underline"
               >
-                View Procurement Overview
+                {t('clogViewOverview')}
               </button>
             </p>
           </div>

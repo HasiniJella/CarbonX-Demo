@@ -23,9 +23,9 @@ const QUICK_REPLIES = [
 
 export default function SupportCenter() {
   const navigate = useNavigate();
-  const { currentLang } = useLanguage();
+  const { currentLang, t } = useLanguage();
   const [openFaq, setOpenFaq] = useState(0);
-  const [messages, setMessages] = useState([{ role: 'bot', text: 'Hello! I am CarbonX Support. How can I help you today?' }]);
+  const [messages, setMessages] = useState([{ role: 'bot', text: t('supWelcome') }]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -51,10 +51,10 @@ export default function SupportCenter() {
     try {
       const history = next.slice(-7, -1).map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', text: m.text }));
       const res = await supportChat(question, history, currentLang || 'en');
-      const reply = res?.reply || res?.message || 'Sorry, I could not answer that. Please try again or call the helpline.';
+      const reply = res?.reply || res?.message || t('supErrAnswer');
       setMessages((m) => [...m, { role: 'bot', text: reply }]);
     } catch {
-      setMessages((m) => [...m, { role: 'bot', text: 'The assistant is unreachable right now. Please try again in a moment or call the Farmer Helpline below.' }]);
+      setMessages((m) => [...m, { role: 'bot', text: t('supErrUnreachable') }]);
     } finally {
       setSending(false);
     }
@@ -66,20 +66,20 @@ export default function SupportCenter() {
         <button onClick={() => navigate('/dashboard')} className="p-2 rounded-xl bg-white border border-forest-100 text-carbon-600 hover:text-forest-800">
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-lg font-bold text-carbon-900">Support Center</h1>
+        <h1 className="text-lg font-bold text-carbon-900">{t('supTitle')}</h1>
       </div>
 
       {/* FAQ */}
       <div className="bg-white rounded-2xl border border-forest-100 shadow-sm mb-6">
-        <h2 className="text-xs font-bold text-carbon-700 uppercase tracking-wider p-4 border-b border-forest-50">Frequently Asked Questions</h2>
+        <h2 className="text-xs font-bold text-carbon-700 uppercase tracking-wider p-4 border-b border-forest-50">{t('supFaqTitle')}</h2>
         {FAQS.map((faq, i) => (
           <div key={i} className="border-b border-forest-50 last:border-0">
             <button onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
               className="w-full flex justify-between items-center p-4 text-left hover:bg-forest-50/30 transition-colors">
-              <span className="text-xs font-bold text-carbon-800">{faq.q}</span>
+              <span className="text-xs font-bold text-carbon-800">{t(`supFaq${i + 1}Q`)}</span>
               {openFaq === i ? <ChevronUp size={16} className="text-carbon-400" /> : <ChevronDown size={16} className="text-carbon-400" />}
             </button>
-            {openFaq === i && <p className="px-4 pb-4 text-xs text-carbon-500 leading-relaxed">{faq.a}</p>}
+            {openFaq === i && <p className="px-4 pb-4 text-xs text-carbon-500 leading-relaxed">{t(`supFaq${i + 1}A`)}</p>}
           </div>
         ))}
       </div>
@@ -88,13 +88,13 @@ export default function SupportCenter() {
       <div className="bg-forest-50 border border-forest-100 rounded-2xl p-4 mb-6 flex items-center gap-3">
         <div className="p-2.5 bg-forest-100 text-forest-700 rounded-xl"><PhoneCall className="w-5 h-5" /></div>
         <div className="flex-1">
-          <p className="text-xs font-bold text-carbon-800">Farmer Helpline</p>
+          <p className="text-xs font-bold text-carbon-800">{t('supHelpline')}</p>
           <a href={`tel:${HELPLINE.replace(/-/g, '')}`} className="text-[11px] text-forest-700 font-bold hover:underline">
-            {HELPLINE} (Toll-Free, 9 AM - 9 PM IST)
+            {HELPLINE} {t('supHelplineHours')}
           </a>
-          <p className="text-[10px] text-carbon-400">Tap to call from your phone</p>
+          <p className="text-[10px] text-carbon-400">{t('supTapCall')}</p>
         </div>
-        <button onClick={copyHelpline} title="Copy helpline number"
+        <button onClick={copyHelpline} title={t('supCopyTitle')}
           className="p-2 rounded-xl bg-white border border-forest-100 text-carbon-600 hover:text-forest-800 transition-colors">
           {copied ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
         </button>
@@ -104,7 +104,7 @@ export default function SupportCenter() {
       <div className="bg-white rounded-2xl border border-forest-100 shadow-sm overflow-hidden">
         <div className="bg-forest-800 text-white p-4 flex items-center gap-2">
           <MessageSquare size={18} />
-          <span className="text-xs font-bold">CarbonX Assistant</span>
+          <span className="text-xs font-bold">{t('supAssistant')}</span>
         </div>
         <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
           {messages.map((m, i) => (
@@ -123,7 +123,7 @@ export default function SupportCenter() {
               <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-forest-800 text-white">
                 <Loader2 size={16} className="animate-spin" />
               </div>
-              <div className="rounded-2xl px-3 py-2 text-xs bg-forest-50 text-carbon-500">Typing…</div>
+              <div className="rounded-2xl px-3 py-2 text-xs bg-forest-50 text-carbon-500">{t('supTyping')}</div>
             </div>
           )}
         </div>
@@ -131,15 +131,15 @@ export default function SupportCenter() {
         {/* Quick replies */}
         {messages.length <= 2 && (
           <div className="px-4 pb-3 flex flex-wrap gap-2">
-            {QUICK_REPLIES.map(q => (
-              <button key={q} onClick={() => send(q)} className="text-[10px] font-bold bg-forest-50 text-forest-700 px-3 py-1.5 rounded-xl hover:bg-forest-100 transition-colors">{q}</button>
+            {QUICK_REPLIES.map((q, i) => (
+              <button key={q} onClick={() => send(t(`supQuick${i + 1}`))} className="text-[10px] font-bold bg-forest-50 text-forest-700 px-3 py-1.5 rounded-xl hover:bg-forest-100 transition-colors">{t(`supQuick${i + 1}`)}</button>
             ))}
           </div>
         )}
 
         {/* Input */}
         <form onSubmit={e => { e.preventDefault(); send(input); }} className="p-4 border-t border-forest-50 flex gap-2">
-          <input type="text" value={input} onChange={e => setInput(e.target.value)} placeholder="Type your question..."
+          <input type="text" value={input} onChange={e => setInput(e.target.value)} placeholder={t('supInputPh')}
             disabled={sending}
             className="flex-1 p-2.5 bg-forest-50 border border-forest-100 rounded-xl text-xs focus:outline-none focus:border-forest-600 focus:bg-white disabled:opacity-60" />
           <button type="submit" disabled={sending} className="p-2.5 bg-forest-800 text-white rounded-xl hover:bg-forest-900 transition-colors disabled:opacity-50">

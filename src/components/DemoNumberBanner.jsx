@@ -1,12 +1,13 @@
 import React from 'react';
 import { Smartphone } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 // Pre-seeded demo farmers (scripts/seed_tier_demo.py) so judges can view
 // every verification tier without waiting for SMS.
 export const DEMO_NUMBERS = [
-  { phone: '9000000011', name: 'Ramesh Kumar', tier: 'Tier 1 · Registry hit' },
-  { phone: '9000000012', name: 'Lakshmi Narayana', tier: 'Tier 2 · Document check' },
-  { phone: '9000000013', name: 'Mallaiah Yadav', tier: 'Tier 3 · FPO review' },
+  { phone: '9000000011', name: 'Ramesh Kumar', tierKey: 'tier1Label' },
+  { phone: '9000000012', name: 'Lakshmi Narayana', tierKey: 'tier2Label' },
+  { phone: '9000000013', name: 'Mallaiah Yadav', tierKey: 'tier3Label' },
 ];
 
 // Backwards-compatible default (Tier 1).
@@ -14,6 +15,7 @@ export const DEMO_FARMER_PHONE = DEMO_NUMBERS[0].phone;
 export const DEMO_FARMER_NAME = DEMO_NUMBERS[0].name;
 
 export default function DemoNumberBanner({ onAutofill }) {
+  const { t } = useLanguage();
   const fill = (phone) => {
     if (!onAutofill) return;
     // Supports both setPhone-style setters and no-arg callbacks.
@@ -26,7 +28,7 @@ export default function DemoNumberBanner({ onAutofill }) {
       <div className="flex items-center gap-2">
         <Smartphone className="w-5 h-5 text-amber-600 shrink-0" />
         <p className="text-xs font-bold text-amber-900">
-          SIH demo? Tap a number to autofill — pre-seeded farms, no SMS wait
+          {t('demoBannerTitle')}
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -39,9 +41,9 @@ export default function DemoNumberBanner({ onAutofill }) {
           >
             <span>
               <span className="block font-mono font-bold tracking-widest text-xs text-amber-900">{d.phone}</span>
-              <span className="block text-[10px] text-amber-700">{d.name} — {d.tier}</span>
+              <span className="block text-[10px] text-amber-700">{d.name} — {t(d.tierKey)}</span>
             </span>
-            <span className="shrink-0 px-2 py-1 bg-amber-600 text-white text-[10px] font-bold rounded-md">Use</span>
+            <span className="shrink-0 px-2 py-1 bg-amber-600 text-white text-[10px] font-bold rounded-md">{t('demoUse')}</span>
           </button>
         ))}
       </div>
