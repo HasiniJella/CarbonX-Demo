@@ -47,6 +47,89 @@ export default function FarmerRegister() {
     return () => clearInterval(interval);
   }, [timerActive, otpTimer]);
 
+  // Field keywords (English + Hindi + Telugu) for single-speech form fill,
+  // e.g. "name Ramesh, mobile 9876543210, village Pochampally".
+  // Longer phrases first so "mobile number" wins over "number".
+  const FIELD_KEYWORDS = [
+    { field: 'phone', words: ['mobile number', 'phone number', 'mobile', 'phone', 'number', 'मोबाइल नंबर', 'मोबाइल', 'फ़ोन नंबर', 'फोन नंबर', 'नंबर', 'మొబైల్ నంబర్', 'మొబైల్', 'ఫోన్ నంబర్', 'ఫోన్', 'నంబర్'] },
+    { field: 'name', words: ['my name is', 'mero naam', 'mera naam', 'meranaam', 'naa peru', 'naperu', 'name', 'naam', 'मेरा नाम', 'नाम', 'నా పేరు', 'పేరు'] },
+    { field: 'village', words: ['village', 'gaon', 'gram', 'गांव', 'गाँव', 'ग्राम', 'గ్రామం', 'ఊరు'] },
+    { field: 'mandal', words: ['mandal', 'tehsil', 'block', 'मंडल', 'तहसील', 'మండలం'] },
+    { field: 'district', words: ['district', 'jilla', 'jila', 'zilla', 'जिला', 'జిల్లా'] },
+    { field: 'surveyNumber', words: ['survey number', 'survey', 'khata number', 'सर्वे नंबर', 'सर्वे', 'సర్వే నంబర్', 'సర్వే'] },
+  ];
+
+  const DISTRICT_OPTIONS = ['Yadadri Bhuvanagiri', 'Warangal', 'Jangaon'];
+
+  // Remembers which input the farmer tapped last, so plain dictation
+  // (no field names) lands in that box instead of always the name.
+  const activeFieldRef = useRef(null);
+  const markActive = (field) => () => { activeFieldRef.current = field; };
+
+  const cleanSegment = (s) => String(s || '')
+    .replace(/^(is|hai|hain|yeh|ye|mera|meri|mere|naa|na|nenu|nen|main|mai|the|my)\b[\s,]*/i, '')
+    .replace(/[.,;]+$/g, '')
+    .trim();
+
+  const titleCase = (s) => String(s || '').replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+
+  const fillFromSpeech = (transcript) => {
+    const lower = ` ${String(transcript || '').toLowerCase()} `;
+    // Locate every keyword hit, longest match wins at each position.
+    const hits = [];
+    FIELD_KEYWORDS.forEach(({ field, words }) => {
+      [...words].sort((a, b) => b.length - a.length).forEach((w) => {
+        const needle = ` ${w.toLowerCase()} `;
+        let idx = lower.indexOf(needle);
+        while (idx !== -1) {
+          hits.push({ field, start: idx, end: idx + needle.length });
+          idx = lower.indexOf(needle, idx + 1);
+        }
+      });
+    });
+    const setters = { name: setName, phone: setPhone, village: setVillage, mandal: setMandal, district: setDistrict, surveyNumber: setSurveyNumber };
+    const raw = String(transcript || '');
+    if (hits.length === 0) {
+      // No field names mentioned: fill the last-tapped box, else the name.
+      const target = activeFieldRef.current && setters[activeFieldRef.current] ? activeFieldRef.current : 'name';
+      const value = target === 'name' ? titleCase(raw.trim()) : raw.trim();
+      if (value) setters[target](value);
+      return;
+    }
+    // De-duplicate overlapping hits, keep earliest-starting longest match.
+    hits.sort((a, b) => a.start - b.start || b.end - a.end);
+    const spans = [];
+    hits.forEach((h) => {
+      if (!spans.some((s) => h.start < s.end && h.end > s.start)) spans.push(h);
+    });
+    spans.sort((a, b) => a.start - b.start);
+    spans.forEach((h, i) => {
+      const segStart = h.end;
+      const segEnd = i + 1 < spans.length ? spans[i + 1].start : raw.length + 2;
+      // Map back onto the original-cased transcript approximately.
+      const seg = cleanSegment(raw.slice(Math.max(0, segStart - 1), Math.max(0, segEnd - 1)));
+      if (!seg) return;
+      if (h.field === 'phone') {
+        const digits = seg.replace(/\D/g, '');
+        const allDigits = raw.replace(/\D/g, '');
+        const num = digits.length >= 10 ? digits.slice(-10) : (allDigits.length >= 10 ? allDigits.slice(-10) : '');
+        if (num) setters.phone(num);
+      } else if (h.field === 'surveyNumber') {
+        // Speech often hears "101/A" as "101 by A" — normalize both.
+        const norm = (s) => String(s || '').replace(/(\d+)\s*(?:\/|by)\s*([A-Za-z]+)/i, '$1/$2');
+        const m = norm(seg).match(/(\d+\s*\/\s*[A-Za-z]+)/) || norm(raw).match(/(\d+\s*\/\s*[A-Za-z]+)/);
+        if (m) setters.surveyNumber(m[1].replace(/\s+/g, ''));
+      } else if (h.field === 'district') {
+        const found = DISTRICT_OPTIONS.find((d) => seg.toLowerCase().includes(d.toLowerCase().split(' ')[0].toLowerCase()) || d.toLowerCase().includes(seg.toLowerCase()));
+        if (found) setters.district(found);
+      } else if (h.field === 'name') {
+        setters.name(titleCase(seg));
+      } else {
+        setters[h.field](titleCase(seg));
+      }
+    });
+  };
+
   const handleMicClick = () => {
     // Tap again while listening to stop.
     if (isListening) {
@@ -77,8 +160,8 @@ export default function FarmerRegister() {
       }
       const text = (fin || interim).trim();
       if (text) setSpeechText(text);
-      // Dictation fills the name field — the farmer can edit it after.
-      if (fin.trim()) setName(fin.trim());
+      // Final transcript fills every mentioned field (or the tapped box).
+      if (fin.trim()) fillFromSpeech(fin.trim());
     };
     rec.onerror = (e) => {
       setIsListening(false);
@@ -258,6 +341,7 @@ export default function FarmerRegister() {
                 required
                 placeholder={t('regLegalPh')}
                 value={name}
+                onFocus={markActive('name')}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-2.5 bg-[#F8FAF8] border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
               />
@@ -270,6 +354,7 @@ export default function FarmerRegister() {
                 required
                 placeholder={t('regMobilePh')}
                 value={phone}
+                onFocus={markActive('phone')}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full px-3 py-2.5 bg-[#F8FAF8] border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
               />
@@ -321,9 +406,10 @@ export default function FarmerRegister() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">{t('regMandal')}</label>
-              <input
+                <input
                 type="text"
                 value={mandal}
+                onFocus={markActive('mandal')}
                 onChange={(e) => setMandal(e.target.value)}
                 className="w-full px-3 py-2.5 bg-[#F8FAF8] border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
               />
@@ -331,9 +417,10 @@ export default function FarmerRegister() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">{t('regVillage')}</label>
-              <input
+                <input
                 type="text"
                 value={village}
+                onFocus={markActive('village')}
                 onChange={(e) => setVillage(e.target.value)}
                 className="w-full px-3 py-2.5 bg-[#F8FAF8] border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
               />
@@ -347,6 +434,7 @@ export default function FarmerRegister() {
                 type="text"
                 placeholder={t('regSurveyPh')}
                 value={surveyNumber}
+                onFocus={markActive('surveyNumber')}
                 onChange={(e) => setSurveyNumber(e.target.value)}
                 className="w-full px-3 py-2.5 bg-[#F8FAF8] border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-emerald-600 font-mono"
               />
